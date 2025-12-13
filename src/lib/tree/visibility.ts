@@ -25,6 +25,48 @@ export function computeVisibleNodes(flatNodes: FlatNode[], expandedSet: Set<stri
 }
 
 /**
+ * 计算过滤后的可见节点列表（搜索模式）
+ * 只显示匹配节点 + 其祖先路径
+ * @param flatNodes 扁平节点数组
+ * @param expandedSet 展开状态集合
+ * @param filterSet 过滤匹配集合（匹配节点 + 祖先节点）
+ */
+export function computeFilteredVisibleNodes(
+  flatNodes: FlatNode[],
+  expandedSet: Set<string>,
+  filterSet: Set<string>
+): FlatNode[] {
+  // 如果没有过滤条件，走正常逻辑
+  if (filterSet.size === 0) {
+    return computeVisibleNodes(flatNodes, expandedSet);
+  }
+
+  const visible: FlatNode[] = [];
+  let i = 0;
+
+  while (i < flatNodes.length) {
+    const node = flatNodes[i];
+
+    // 只显示在过滤集合中的节点
+    if (filterSet.has(node.id)) {
+      visible.push(node);
+
+      // 如果节点未展开或不在展开集合中，跳过子树
+      if (node.hasChildren && !expandedSet.has(node.id)) {
+        i = node.subtreeEnd + 1;
+      } else {
+        i++;
+      }
+    } else {
+      // 不在过滤集合中，跳过整个子树
+      i = node.subtreeEnd + 1;
+    }
+  }
+
+  return visible;
+}
+
+/**
  * 切换节点展开状态
  */
 export function toggleExpand(nodeId: string, expandedSet: Set<string>): Set<string> {

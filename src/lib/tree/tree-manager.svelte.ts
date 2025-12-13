@@ -1,6 +1,6 @@
 import type { RawNode, FlatNode, TreeIndex, CheckState, SearchResult } from './types';
 import { buildFlatTree } from './flatten';
-import { computeVisibleNodes, toggleExpand, expandMultiple } from './visibility';
+import { computeVisibleNodes, computeFilteredVisibleNodes, toggleExpand, expandMultiple } from './visibility';
 import { toggleCheck, getCheckState, checkAll, uncheckAll, getCheckedLeafIds } from './checkbox';
 
 /**
@@ -23,12 +23,17 @@ export class TreeManager {
   // ========== 小状态：使用 $state ==========
   expandedSet = $state<Set<string>>(new Set());
   checkedSet = $state<Set<string>>(new Set());
-  searchMatchSet = $state<Set<string>>(new Set());
+  searchMatchSet = $state<Set<string>>(new Set()); // 精确匹配的节点
+  searchFilterSet = $state<Set<string>>(new Set()); // 过滤显示集合（匹配节点 + 祖先）
   searchKeyword = $state('');
   isLoading = $state(false);
 
   // ========== 派生状态：使用 $derived ==========
   visibleList = $derived.by(() => {
+    // 如果有搜索过滤，使用过滤模式
+    if (this.searchFilterSet.size > 0) {
+      return computeFilteredVisibleNodes(this._flatNodes, this.expandedSet, this.searchFilterSet);
+    }
     return computeVisibleNodes(this._flatNodes, this.expandedSet);
   });
 
@@ -73,6 +78,7 @@ export class TreeManager {
       this.expandedSet = new Set();
       this.checkedSet = new Set();
       this.searchMatchSet = new Set();
+      this.searchFilterSet = new Set();
       this.searchKeyword = '';
     } finally {
       this.isLoading = false;
@@ -155,14 +161,20 @@ export class TreeManager {
   }
 
   /**
-   * 应用搜索结果
+   * 应用搜索结果（过滤模式）
+   * matchIds: 精确匹配的节点
+   * expandIds: 匹配节点的祖先节点
    */
   applySearchResult(result: SearchResult): void {
     this.searchMatchSet = result.matchIds;
 
     if (result.matchIds.size > 0) {
-      // 合并现有展开 + 搜索需要展开的
+      // 构建过滤集合 = 匹配节点 + 祖先节点
+      this.searchFilterSet = new Set([...result.matchIds, ...result.expandIds]);
+      // 展开所有祖先节点
       this.expandedSet = expandMultiple(result.expandIds, this.expandedSet);
+    } else {
+      this.searchFilterSet = new Set();
     }
   }
 
@@ -171,6 +183,7 @@ export class TreeManager {
    */
   clearSearch(): void {
     this.searchMatchSet = new Set();
+    this.searchFilterSet = new Set();
     this.searchKeyword = '';
   }
 

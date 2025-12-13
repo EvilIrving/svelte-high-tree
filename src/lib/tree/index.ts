@@ -5,6 +5,7 @@ export type { RawNode, FlatNode, TreeIndex, CheckState, VirtualListState, Search
 export { buildFlatTree, getAncestorIds, getSubtreeIds } from './flatten';
 export {
   computeVisibleNodes,
+  computeFilteredVisibleNodes,
   toggleExpand,
   expandToNode,
   toggleSubtree,
