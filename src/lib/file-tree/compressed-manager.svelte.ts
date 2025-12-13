@@ -97,17 +97,17 @@ export class CompressedTreeManager {
     this._flatNodes = result.flatNodes;
     this._index = result.index;
 
-    // 4. 清理无效的展开状态（保留仍然存在的 sourceId）
-    const validSourceIds = new Set<string>();
-    for (const node of this._flatNodes) {
-      for (const sourceId of node.sourceIds) {
-        validSourceIds.add(sourceId);
-      }
-    }
+    // 4. 重建展开状态：如果压缩链中任意 sourceId 曾被展开，新的首+尾都要展开
+    const oldExpanded = this.expandedSet;
     const newExpanded = new Set<string>();
-    for (const sourceId of this.expandedSet) {
-      if (validSourceIds.has(sourceId)) {
-        newExpanded.add(sourceId);
+    for (const node of this._flatNodes) {
+      if (!node.hasChildren) continue;
+
+      // 检查该压缩链中是否有任意 sourceId 曾经被展开
+      const wasExpanded = node.sourceIds.some((id) => oldExpanded.has(id));
+      if (wasExpanded) {
+        newExpanded.add(node.sourceIds[0]); // 首
+        newExpanded.add(node.tailSourceId); // 尾
       }
     }
     this.expandedSet = newExpanded;

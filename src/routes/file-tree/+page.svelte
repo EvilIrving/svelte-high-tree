@@ -73,30 +73,7 @@
 				{ type: 'folder', name: 'forms', id: 'folder-forms' }
 			]
 		},
-		{
-			type: 'file',
-			name: 'Select.tsx',
-			id: 'file-7',
-			parent: [
-				{ type: 'folder', name: 'project', id: 'folder-root' },
-				{ type: 'folder', name: 'src', id: 'folder-src' },
-				{ type: 'folder', name: 'components', id: 'folder-components' },
-				{ type: 'folder', name: 'ui', id: 'folder-ui' },
-				{ type: 'folder', name: 'forms', id: 'folder-forms' }
-			]
-		},
-		{
-			type: 'file',
-			name: 'Checkbox.tsx',
-			id: 'file-8',
-			parent: [
-				{ type: 'folder', name: 'project', id: 'folder-root' },
-				{ type: 'folder', name: 'src', id: 'folder-src' },
-				{ type: 'folder', name: 'components', id: 'folder-components' },
-				{ type: 'folder', name: 'ui', id: 'folder-ui' },
-				{ type: 'folder', name: 'forms', id: 'folder-forms' }
-			]
-		},
+		 
 		{
 			type: 'file',
 			name: 'Modal.tsx',
@@ -109,66 +86,8 @@
 				{ type: 'folder', name: 'overlays', id: 'folder-overlays' }
 			]
 		},
-		{
-			type: 'file',
-			name: 'Drawer.tsx',
-			id: 'file-10',
-			parent: [
-				{ type: 'folder', name: 'project', id: 'folder-root' },
-				{ type: 'folder', name: 'src', id: 'folder-src' },
-				{ type: 'folder', name: 'components', id: 'folder-components' },
-				{ type: 'folder', name: 'ui', id: 'folder-ui' },
-				{ type: 'folder', name: 'overlays', id: 'folder-overlays' }
-			]
-		},
-		{
-			type: 'file',
-			name: 'Tooltip.tsx',
-			id: 'file-11',
-			parent: [
-				{ type: 'folder', name: 'project', id: 'folder-root' },
-				{ type: 'folder', name: 'src', id: 'folder-src' },
-				{ type: 'folder', name: 'components', id: 'folder-components' },
-				{ type: 'folder', name: 'ui', id: 'folder-ui' },
-				{ type: 'folder', name: 'overlays', id: 'folder-overlays' }
-			]
-		},
-		{
-			type: 'file',
-			name: 'Table.tsx',
-			id: 'file-12',
-			parent: [
-				{ type: 'folder', name: 'project', id: 'folder-root' },
-				{ type: 'folder', name: 'src', id: 'folder-src' },
-				{ type: 'folder', name: 'components', id: 'folder-components' },
-				{ type: 'folder', name: 'ui', id: 'folder-ui' },
-				{ type: 'folder', name: 'data-display', id: 'folder-data-display' }
-			]
-		},
-		{
-			type: 'file',
-			name: 'List.tsx',
-			id: 'file-13',
-			parent: [
-				{ type: 'folder', name: 'project', id: 'folder-root' },
-				{ type: 'folder', name: 'src', id: 'folder-src' },
-				{ type: 'folder', name: 'components', id: 'folder-components' },
-				{ type: 'folder', name: 'ui', id: 'folder-ui' },
-				{ type: 'folder', name: 'data-display', id: 'folder-data-display' }
-			]
-		},
-		{
-			type: 'file',
-			name: 'Card.tsx',
-			id: 'file-14',
-			parent: [
-				{ type: 'folder', name: 'project', id: 'folder-root' },
-				{ type: 'folder', name: 'src', id: 'folder-src' },
-				{ type: 'folder', name: 'components', id: 'folder-components' },
-				{ type: 'folder', name: 'ui', id: 'folder-ui' },
-				{ type: 'folder', name: 'data-display', id: 'folder-data-display' }
-			]
-		},
+		 
+		 
 
 		// src/components/layout - 布局组件
 		{
