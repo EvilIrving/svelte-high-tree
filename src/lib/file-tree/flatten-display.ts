@@ -62,7 +62,8 @@ export function flattenDisplayNodes(displayNodes: DisplayNode[]): {
         subtreeEnd: index, // 先设为自己，后面更新
         hasChildren,
         nodeType: displayNode.nodeType,
-        sourceIds: displayNode.sourceIds
+        sourceIds: displayNode.sourceIds,
+        tailSourceId: displayNode.tailSourceId
       };
 
       flatNodes.push(flatNode);
@@ -97,10 +98,11 @@ export function flattenDisplayNodes(displayNodes: DisplayNode[]): {
 /**
  * 计算可见节点列表
  * 复用现有 Tree 组件的可见性计算逻辑
+ * @param expandedSourceIds - 存储的是 sourceId，不是 displayId
  */
 export function computeVisibleDisplayNodes(
   flatNodes: FlatDisplayNode[],
-  expandedSet: Set<string>
+  expandedSourceIds: Set<string>
 ): FlatDisplayNode[] {
   const visible: FlatDisplayNode[] = [];
   let i = 0;
@@ -110,7 +112,8 @@ export function computeVisibleDisplayNodes(
     visible.push(node);
 
     // 如果有子节点且未展开，跳过整个子树
-    if (node.hasChildren && !expandedSet.has(node.id)) {
+    // 使用 tailSourceId 判断展开状态（展开的是链尾节点）
+    if (node.hasChildren && !expandedSourceIds.has(node.tailSourceId)) {
       i = node.subtreeEnd + 1;
     } else {
       i++;

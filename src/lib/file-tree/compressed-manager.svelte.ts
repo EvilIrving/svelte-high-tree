@@ -25,6 +25,7 @@ export class CompressedTreeManager {
   private sourceToDisplayMap = new Map<string, string>();
 
   // ========== 响应式状态（使用 Svelte 5 runes） ==========
+  /** 存储 sourceId，不是 displayId */
   expandedSet = $state<Set<string>>(new Set());
   selectedId = $state<string | null>(null);
 
@@ -96,12 +97,17 @@ export class CompressedTreeManager {
     this._flatNodes = result.flatNodes;
     this._index = result.index;
 
-    // 4. 清理无效的展开状态
-    const validIds = new Set(this._flatNodes.map((n) => n.id));
+    // 4. 清理无效的展开状态（保留仍然存在的 sourceId）
+    const validSourceIds = new Set<string>();
+    for (const node of this._flatNodes) {
+      for (const sourceId of node.sourceIds) {
+        validSourceIds.add(sourceId);
+      }
+    }
     const newExpanded = new Set<string>();
-    for (const id of this.expandedSet) {
-      if (validIds.has(id)) {
-        newExpanded.add(id);
+    for (const sourceId of this.expandedSet) {
+      if (validSourceIds.has(sourceId)) {
+        newExpanded.add(sourceId);
       }
     }
     this.expandedSet = newExpanded;
@@ -109,13 +115,23 @@ export class CompressedTreeManager {
 
   /**
    * 切换展开状态
+   * 展开时存储首节点 + 尾节点的 sourceId
    */
   toggleExpand(nodeId: string): void {
+    const node = this._index.nodeMap.get(nodeId);
+    if (!node) return;
+
+    const headSourceId = node.sourceIds[0];
+    const tailSourceId = node.tailSourceId;
+
     const newSet = new Set(this.expandedSet);
-    if (newSet.has(nodeId)) {
-      newSet.delete(nodeId);
+    // 用 tailSourceId 判断当前是否展开
+    if (newSet.has(tailSourceId)) {
+      newSet.delete(headSourceId);
+      newSet.delete(tailSourceId);
     } else {
-      newSet.add(nodeId);
+      newSet.add(headSourceId);
+      newSet.add(tailSourceId);
     }
     this.expandedSet = newSet;
   }
@@ -127,7 +143,9 @@ export class CompressedTreeManager {
     const newSet = new Set<string>();
     for (const node of this._flatNodes) {
       if (node.hasChildren && node.depth < depth) {
-        newSet.add(node.id);
+        // 添加首节点 + 尾节点 sourceId
+        newSet.add(node.sourceIds[0]);
+        newSet.add(node.tailSourceId);
       }
     }
     this.expandedSet = newSet;
@@ -140,7 +158,9 @@ export class CompressedTreeManager {
     const newSet = new Set<string>();
     for (const node of this._flatNodes) {
       if (node.hasChildren) {
-        newSet.add(node.id);
+        // 添加首节点 + 尾节点 sourceId
+        newSet.add(node.sourceIds[0]);
+        newSet.add(node.tailSourceId);
       }
     }
     this.expandedSet = newSet;

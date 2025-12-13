@@ -93,7 +93,7 @@
 
 <div bind:this={containerRef} class="file-tree-container">
   <!-- 占位容器，撑起总高度 -->
-  <div class="file-tree-spacer" style="height: {totalHeight}px;">
+  <div class="file-tree-spacer">
     <!-- 顶部哨兵 -->
     <div
       bind:this={topSentinelRef}

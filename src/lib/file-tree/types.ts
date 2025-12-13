@@ -44,6 +44,8 @@ export interface FlatDisplayNode {
   nodeType: 'folder' | 'file';
   /** 对应的源节点 ID 列表 */
   sourceIds: string[];
+  /** 压缩链尾节点 ID（用于判断展开状态） */
+  tailSourceId: string;
 }
 
 // ============ 索引结构 ============
