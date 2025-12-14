@@ -54,14 +54,36 @@ function buildInvertedIndex(data: SearchData[]): void {
  * 分词
  */
 function tokenize(name: string): string[] {
-  return name
-    .toLowerCase()
-    .replace(/([a-z])([A-Z])/g, '$1 $2') // camelCase → camel Case
-    .replace(/[_\-\.\/\\]/g, ' ')
-    .split(/\s+/)
-    .filter((t) => t.length > 0);
-}
+  const lower = name.toLowerCase();
+  const tokens: string[] = [];
 
+  let current = '';
+
+  for (const ch of lower) {
+    if (/[a-z0-9]/.test(ch)) {
+      // 英文、数字：串起来形成一个单词
+      current += ch;
+    } else {
+      // 一旦遇到非英文数字，先把前面的英文数字 token 收尾
+      if (current) {
+        tokens.push(current);
+        current = '';
+      }
+
+      // 中文：每个字一个 token
+      if (/[\u4e00-\u9fff]/.test(ch)) {
+        tokens.push(ch);
+      }
+      // 其他符号（-_~!@#$%^&*等）直接忽略，当分隔符用
+    }
+  }
+
+  if (current) {
+    tokens.push(current);
+  }
+
+  return tokens;
+}
 /**
  * 执行模糊搜索
  */
