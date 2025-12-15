@@ -20,10 +20,11 @@ export class SearchController {
   }
 
   /**
+   * 
    * 初始化 Worker
    */
   init(searchData: Array<{ id: string; name: string; parentId: string | null }>): void {
-    // 使用 Vite 的 Worker 导入语法
+    // 使用 Vite 的 Work
     this.worker = new Worker(new URL('./search.worker.ts', import.meta.url), {
       type: 'module'
     });

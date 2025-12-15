@@ -1,5 +1,7 @@
 // Types
 export type { RawNode, FlatNode, TreeIndex, CheckState, VirtualListState, SearchResult } from './types';
+export type { SearchConfig } from './search-config';
+export type { NavigateResult } from './search-navigator.svelte';
 
 // Core functions
 export { buildFlatTree, getAncestorIds, getSubtreeIds } from './flatten';
@@ -24,6 +26,10 @@ export {
 // Controllers
 export { VirtualListController, calculateVisibleRange } from './virtual-list';
 export { SearchController, searchSync } from './search-controller';
+export { SearchNavigator, createSearchNavigator } from './search-navigator.svelte';
+
+// Config
+export { defaultSearchConfig, createSearchConfig } from './search-config';
 
 // Manager
 export { TreeManager, createTreeManager } from './tree-manager.svelte';

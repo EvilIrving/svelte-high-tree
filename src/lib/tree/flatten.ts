@@ -35,7 +35,7 @@ export function buildFlatTree(rawNodes: RawNode[]): {
 
   const stack: StackItem[] = [];
 
-  // 逆序压入根节点（保证正序处理）
+  // 逆序压入根节点（保证正序处理），栈是 LIFO（后入先出），逆序压入能保证正序处理
   for (let i = rootIds.length - 1; i >= 0; i--) {
     stack.push({ id: rootIds[i], depth: 0, phase: 'enter' });
   }
