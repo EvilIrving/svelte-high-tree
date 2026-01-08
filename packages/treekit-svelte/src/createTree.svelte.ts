@@ -1,13 +1,15 @@
 import { TreeEngine, type RawNode, type TreeOptions, type FlatNode, type NodeStatus, type TreeIndex } from '@light-cat/treekit-core';
 
 /**
- * Svelte 适配器 - 将 TreeEngine 转换为 Svelte 响应式状态
+ * createTree - Svelte 状态适配器
+ *
+ * 将 TreeEngine 转换为 Svelte 响应式状态
  *
  * 特点：
  * - 分离大数据（非响应式）和小状态（响应式）
  * - 通过 subscribe 实现框架无关的订阅机制
  */
-export function createTreeStore(nodes?: RawNode[], options?: TreeOptions) {
+export function createTree(nodes?: RawNode[], options?: TreeOptions) {
   const engine = new TreeEngine(options);
 
   // 大数据：普通数组，不进入响应式系统
@@ -113,6 +115,10 @@ export function createTreeStore(nodes?: RawNode[], options?: TreeOptions) {
 
     expandToDepth(depth: number) {
       engine.expandToDepth(depth);
+    },
+
+    setExpandedSet(newSet: Set<string>) {
+      engine.setExpandedSet(newSet);
     },
 
     checkAll() {

@@ -1,0 +1,262 @@
+import type { FlatNode, CheckState } from '@light-cat/treekit-core';
+
+/**
+ * 虚拟列表状态
+ */
+export interface VirtualListState {
+  startIndex: number;
+  endIndex: number;
+  offsetTop: number;
+}
+
+/**
+ * 获取节点的勾选状态
+ */
+export function getNodeCheckState(
+  node: FlatNode,
+  flatNodes: FlatNode[],
+  checkedSet: Set<string>
+): CheckState {
+  // 自身已勾选
+  if (checkedSet.has(node.id)) {
+    return 'checked';
+  }
+
+  // 无子节点
+  if (!node.hasChildren) {
+    return 'unchecked';
+  }
+
+  // 检查子树是否有任何勾选（半选判断）
+  if (isSubtreeHasAnyChecked(node, flatNodes, checkedSet)) {
+    return 'indeterminate';
+  }
+
+  return 'unchecked';
+}
+
+/**
+ * 检查子树是否有任何节点勾选
+ */
+function isSubtreeHasAnyChecked(
+  node: FlatNode,
+  flatNodes: FlatNode[],
+  checkedSet: Set<string>
+): boolean {
+  for (let i = node.index + 1; i <= node.subtreeEnd; i++) {
+    if (checkedSet.has(flatNodes[i].id)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/**
+ * 虚拟列表控制器
+ * 使用 IntersectionObserver 实现高性能虚拟滚动
+ */
+export class VirtualListController {
+  private container: HTMLElement | null = null;
+  private topSentinel: HTMLElement | null = null;
+  private bottomSentinel: HTMLElement | null = null;
+  private observer: IntersectionObserver | null = null;
+
+  private itemHeight: number;
+  private bufferSize: number;
+  private visibleList: FlatNode[] = [];
+
+  private state: VirtualListState = {
+    startIndex: 0,
+    endIndex: 0,
+    offsetTop: 0
+  };
+
+  private onStateChange: (state: VirtualListState) => void;
+  private scrollHandler: (() => void) | null = null;
+
+  constructor(options: {
+    itemHeight: number;
+    bufferSize?: number;
+    onStateChange: (state: VirtualListState) => void;
+  }) {
+    this.itemHeight = options.itemHeight;
+    this.bufferSize = options.bufferSize ?? 10;
+    this.onStateChange = options.onStateChange;
+  }
+
+  /**
+   * 初始化
+   */
+  init(container: HTMLElement, topSentinel: HTMLElement, bottomSentinel: HTMLElement): void {
+    this.container = container;
+    this.topSentinel = topSentinel;
+    this.bottomSentinel = bottomSentinel;
+
+    // 使用 IntersectionObserver 检测边界
+    this.observer = new IntersectionObserver(
+      (entries) => this.handleIntersection(entries),
+      {
+        root: container,
+        rootMargin: `${this.bufferSize * this.itemHeight}px 0px`,
+        threshold: 0
+      }
+    );
+
+    this.observer.observe(topSentinel);
+    this.observer.observe(bottomSentinel);
+
+    // 同时监听滚动事件（用于更精确的位置计算）
+    this.scrollHandler = () => this.recalculate();
+    container.addEventListener('scroll', this.scrollHandler, { passive: true });
+
+    this.recalculate();
+  }
+
+  /**
+   * 更新可见列表
+   */
+  updateVisibleList(visibleList: FlatNode[]): void {
+    this.visibleList = visibleList;
+    this.recalculate();
+  }
+
+  /**
+   * 处理交叉观察
+   */
+  private handleIntersection(entries: IntersectionObserverEntry[]): void {
+    let needsRecalc = false;
+
+    for (const entry of entries) {
+      if (entry.isIntersecting) {
+        needsRecalc = true;
+      }
+    }
+
+    if (needsRecalc) {
+      this.recalculate();
+    }
+  }
+
+  /**
+   * 重新计算渲染范围
+   */
+  private recalculate(): void {
+    if (!this.container) return;
+
+    const viewportHeight = this.container.clientHeight;
+    const viewportNodes = Math.ceil(viewportHeight / this.itemHeight);
+    const totalNodes = this.visibleList.length;
+
+    // 计算当前滚动位置对应的起始索引
+    const scrollTop = this.container.scrollTop;
+    const scrollIndex = Math.floor(scrollTop / this.itemHeight);
+
+    // 计算渲染范围（包含缓冲区）
+    const startIndex = Math.max(0, scrollIndex - this.bufferSize);
+    const endIndex = Math.min(totalNodes, scrollIndex + viewportNodes + this.bufferSize);
+
+    const newState: VirtualListState = {
+      startIndex,
+      endIndex,
+      offsetTop: startIndex * this.itemHeight
+    };
+
+    // 只有当状态变化时才通知
+    if (
+      newState.startIndex !== this.state.startIndex ||
+      newState.endIndex !== this.state.endIndex
+    ) {
+      this.state = newState;
+      this.onStateChange(this.state);
+    }
+  }
+
+  /**
+   * 滚动到指定节点
+   */
+  scrollToNode(nodeId: string): void {
+    const index = this.visibleList.findIndex((n) => n.id === nodeId);
+    if (index === -1 || !this.container) return;
+
+    const targetTop = index * this.itemHeight;
+    const viewportHeight = this.container.clientHeight;
+
+    // 如果节点在视口外，滚动到居中位置
+    const currentScrollTop = this.container.scrollTop;
+    if (targetTop < currentScrollTop || targetTop > currentScrollTop + viewportHeight) {
+      this.container.scrollTop = targetTop - viewportHeight / 2 + this.itemHeight / 2;
+    }
+
+    this.recalculate();
+  }
+
+  /**
+   * 滚动到顶部
+   */
+  scrollToTop(): void {
+    if (!this.container) return;
+    this.container.scrollTop = 0;
+    this.recalculate();
+  }
+
+  /**
+   * 滚动到底部
+   */
+  scrollToBottom(): void {
+    if (!this.container) return;
+    this.container.scrollTop = this.visibleList.length * this.itemHeight;
+    this.recalculate();
+  }
+
+  /**
+   * 获取当前状态
+   */
+  getState(): VirtualListState {
+    return { ...this.state };
+  }
+
+  /**
+   * 获取总高度
+   */
+  getTotalHeight(): number {
+    return this.visibleList.length * this.itemHeight;
+  }
+
+  /**
+   * 销毁
+   */
+  destroy(): void {
+    this.observer?.disconnect();
+    this.observer = null;
+
+    if (this.container && this.scrollHandler) {
+      this.container.removeEventListener('scroll', this.scrollHandler);
+    }
+    this.scrollHandler = null;
+    this.container = null;
+  }
+}
+
+/**
+ * 简化版：基于 scroll 事件的虚拟列表计算
+ * 适用于不需要 IntersectionObserver 的场景
+ */
+export function calculateVisibleRange(
+  scrollTop: number,
+  viewportHeight: number,
+  itemHeight: number,
+  totalCount: number,
+  bufferSize: number = 10
+): VirtualListState {
+  const scrollIndex = Math.floor(scrollTop / itemHeight);
+  const viewportNodes = Math.ceil(viewportHeight / itemHeight);
+
+  const startIndex = Math.max(0, scrollIndex - bufferSize);
+  const endIndex = Math.min(totalCount, scrollIndex + viewportNodes + bufferSize);
+
+  return {
+    startIndex,
+    endIndex,
+    offsetTop: startIndex * itemHeight
+  };
+}

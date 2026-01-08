@@ -14,7 +14,8 @@ import {
   getCheckState,
   checkAll,
   uncheckAll,
-  getCheckedLeafIds
+  getCheckedLeafIds,
+  updateAncestorsCheckState
 } from './algorithms/checkbox';
 
 /**
@@ -60,6 +61,8 @@ export class TreeEngine {
       checkable: options?.checkable ?? defaultTreeOptions.checkable,
       accordion: options?.accordion ?? defaultTreeOptions.accordion,
       filterable: options?.filterable ?? defaultTreeOptions.filterable,
+      searchable: options?.searchable ?? defaultTreeOptions.searchable,
+      virtual: options?.virtual ?? defaultTreeOptions.virtual,
       defaultExpandedIds: options?.defaultExpandedIds ?? defaultTreeOptions.defaultExpandedIds,
       defaultCheckedIds: options?.defaultCheckedIds ?? defaultTreeOptions.defaultCheckedIds,
       fieldMapper: options?.fieldMapper ?? defaultTreeOptions.fieldMapper
@@ -320,6 +323,15 @@ export class TreeEngine {
     this._notify();
   }
 
+  /**
+   * 直接设置展开集合（用于搜索结果定位等场景）
+   */
+  setExpandedSet(newSet: Set<string>): void {
+    this._expandedSet = newSet;
+    this._recomputeVisibility();
+    this._notify();
+  }
+
   // ========== Checkbox 操作 ==========
 
   /**
@@ -396,28 +408,7 @@ export class TreeEngine {
   }
 
   private _updateAncestorsCheckState(parentId: string | null): void {
-    let currentParentId = parentId;
-    while (currentParentId !== null) {
-      const parent = this._index.nodeMap.get(currentParentId);
-      if (!parent) break;
-
-      // 检查所有子节点是否都完全勾选
-      let allChildrenFullyChecked = true;
-      for (let i = parent.index; i <= parent.subtreeEnd; i++) {
-        if (!this._checkedSet.has(this._flatNodes[i].id)) {
-          allChildrenFullyChecked = false;
-          break;
-        }
-      }
-
-      if (allChildrenFullyChecked) {
-        this._checkedSet.add(currentParentId);
-      } else {
-        this._checkedSet.delete(currentParentId);
-      }
-
-      currentParentId = parent.parentId;
-    }
+    updateAncestorsCheckState(parentId, this._flatNodes, this._checkedSet, this._index);
   }
 
   // ========== 过滤/搜索操作 ==========

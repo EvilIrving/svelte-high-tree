@@ -1,7 +1,6 @@
 // Types
 export type { RawNode, FlatNode, TreeIndex, CheckState, VirtualListState, SearchResult } from './types';
-export type { SearchConfig } from './search-config';
-export type { NavigateResult } from './search-navigator.svelte';
+export type { SearchConfig, NavigateResult } from '@light-cat/treekit-svelte';
 
 // Core functions
 export { buildFlatTree, getAncestorIds, getSubtreeIds } from './flatten';
@@ -24,12 +23,11 @@ export {
 } from './checkbox';
 
 // Controllers
-export { VirtualListController, calculateVisibleRange } from './virtual-list';
-export { SearchController, searchSync } from './search-controller';
-export { SearchNavigator, createSearchNavigator } from './search-navigator.svelte';
+export { VirtualListController, calculateVisibleRange, getNodeCheckState } from '@light-cat/treekit-svelte';
+export { SearchController, searchSync, SearchNavigator, createSearchNavigator } from '@light-cat/treekit-svelte';
 
 // Config
-export { defaultSearchConfig, createSearchConfig } from './search-config';
+export { defaultSearchConfig, createSearchConfig } from '@light-cat/treekit-svelte';
 
 // Manager
 export { TreeManager, createTreeManager } from './tree-manager.svelte';

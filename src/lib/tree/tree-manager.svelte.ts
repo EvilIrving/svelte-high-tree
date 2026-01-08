@@ -1,5 +1,5 @@
 import type { RawNode, FlatNode, CheckState, SearchResult } from './types';
-import { createTreeStore, type TreeOptions } from '@light-cat/treekit-svelte';
+import { createTree, type TreeOptions } from '@light-cat/treekit-svelte';
 
 /**
  * Tree 管理器
@@ -11,10 +11,10 @@ import { createTreeStore, type TreeOptions } from '@light-cat/treekit-svelte';
  */
 export class TreeManager {
   // 使用适配器创建的状态存储
-  private store: ReturnType<typeof createTreeStore>;
+  private store: ReturnType<typeof createTree>;
 
   constructor(options?: TreeOptions) {
-    this.store = createTreeStore(undefined, options);
+    this.store = createTree(undefined, options);
   }
 
   /**
@@ -86,6 +86,10 @@ export class TreeManager {
 
   expandToDepth(depth: number): void {
     this.store.expandToDepth(depth);
+  }
+
+  setExpandedSet(newSet: Set<string>): void {
+    this.store.setExpandedSet(newSet);
   }
 
   expandAll(): void {

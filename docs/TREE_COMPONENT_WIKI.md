@@ -320,19 +320,21 @@ class VirtualListController {
   <div style="height: {totalHeight}px; position: relative">
     <!-- 顶部哨兵（触发向上滚动） -->
     <div class="sentinel-top" style="top: {offsetTop - 1}px" />
-    
+
     <!-- 实际渲染的节点 -->
     <div style="position: absolute; top: {offsetTop}px">
       {#each renderList as node}
-        <TreeNodeRow {node} />
+        <VirtualTreeNode {...node} />
       {/each}
     </div>
-    
+
     <!-- 底部哨兵（触发向下滚动） -->
     <div class="sentinel-bottom" />
   </div>
 </div>
 ```
+
+> 注：实际使用中请使用 `@light-cat/treekit-svelte` 包提供的 `VirtualTree` 和 `TreeNode` 组件。
 
 ### 5. 异步搜索 (search.worker.ts + search-controller.ts)
 

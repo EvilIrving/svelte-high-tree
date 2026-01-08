@@ -56,7 +56,7 @@
         // 更新导航器并跳转到第一个匹配项
         const navResult = searchNavigator.updateMatches(result.matchIds);
         if (navResult.id) {
-          treeManager.expandedSet = expandMultiple(navResult.expandIds, treeManager.expandedSet);
+          treeManager.setExpandedSet(expandMultiple(navResult.expandIds, treeManager.expandedSet));
           // 延迟滚动，等待 DOM 更新
           requestAnimationFrame(() => {
             virtualTreeRef?.scrollToNode(navResult.id!);
@@ -104,7 +104,7 @@
   function handleNextMatch(): void {
     const result = searchNavigator.next();
     if (result.id) {
-      treeManager.expandedSet = expandMultiple(result.expandIds, treeManager.expandedSet);
+      treeManager.setExpandedSet(expandMultiple(result.expandIds, treeManager.expandedSet));
       requestAnimationFrame(() => {
         virtualTreeRef?.scrollToNode(result.id!);
       });
@@ -117,7 +117,7 @@
   function handlePrevMatch(): void {
     const result = searchNavigator.prev();
     if (result.id) {
-      treeManager.expandedSet = expandMultiple(result.expandIds, treeManager.expandedSet);
+      treeManager.setExpandedSet(expandMultiple(result.expandIds, treeManager.expandedSet));
       requestAnimationFrame(() => {
         virtualTreeRef?.scrollToNode(result.id!);
       });
@@ -497,5 +497,185 @@
     justify-content: center;
     height: 100%;
     color: #999;
+  }
+
+  /* ========== Headless Tree 自定义样式 ==========
+   * treekit-svelte 组件不包含样式，完全由用户自定义
+   *
+   * 可用的 CSS 变量：
+   * - --treekit-primary-color: 主色调
+   * - --treekit-row-height: 行高
+   * - --treekit-indent-width: 缩进宽度
+   */
+
+  /* 节点样式覆盖 */
+  .page-container :global(.treekit-node) {
+    --treekit-primary-color: #1890ff;
+    --treekit-row-height: 32px;
+    --treekit-indent-width: 20px;
+    --treekit-bg-hover: #f5f5f5;
+    --treekit-bg-match: #fffbe6;
+    --treekit-bg-current: #bae7ff;
+    --treekit-text-color: #333;
+    --treekit-border-color: #f0f0f0;
+
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    box-sizing: border-box;
+    border-bottom: 1px solid var(--treekit-border-color);
+    user-select: none;
+    transition: background-color 0.15s;
+    color: var(--treekit-text-color);
+  }
+
+  .page-container :global(.treekit-node:hover) {
+    background-color: var(--treekit-bg-hover);
+  }
+
+  .page-container :global(.treekit-node[data-match="true"]) {
+    background-color: var(--treekit-bg-match);
+  }
+
+  .page-container :global(.treekit-node[data-match="true"]:hover) {
+    background-color: #fff1b8;
+  }
+
+  .page-container :global(.treekit-node[data-current="true"]) {
+    background-color: var(--treekit-bg-current);
+    box-shadow: inset 0 0 0 2px var(--treekit-primary-color);
+  }
+
+  .page-container :global(.treekit-node[data-current="true"]:hover) {
+    background-color: #91d5ff;
+  }
+
+  /* 展开按钮样式 */
+  .page-container :global(.treekit-expand) {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    padding: 0;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    border-radius: 4px;
+    flex-shrink: 0;
+    transition: transform 0.2s;
+  }
+
+  .page-container :global(.treekit-expand:hover:not(:disabled)) {
+    background-color: rgba(0, 0, 0, 0.06);
+  }
+
+  .page-container :global(.treekit-expand:disabled) {
+    cursor: default;
+  }
+
+  .page-container :global(.treekit-expand--expanded .treekit-expand-icon) {
+    transform: rotate(90deg);
+  }
+
+  .page-container :global(.treekit-expand-icon) {
+    transition: transform 0.2s;
+    color: #666;
+  }
+
+  .page-container :global(.treekit-spacer) {
+    width: 16px;
+    height: 16px;
+  }
+
+  /* Checkbox 样式 */
+  .page-container :global(.treekit-checkbox-wrapper) {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+
+  .page-container :global(.treekit-checkbox-input) {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+
+  .page-container :global(.treekit-checkbox-visual) {
+    width: 16px;
+    height: 16px;
+    border: 2px solid #666;
+    border-radius: 3px;
+    background: white;
+    position: relative;
+    transition: all 0.15s;
+  }
+
+  .page-container :global(.treekit-checkbox-visual--checked) {
+    background: var(--treekit-primary-color);
+    border-color: var(--treekit-primary-color);
+  }
+
+  .page-container :global(.treekit-checkbox-visual--checked::after) {
+    content: '';
+    position: absolute;
+    left: 4px;
+    top: 1px;
+    width: 4px;
+    height: 8px;
+    border: solid white;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+  }
+
+  .page-container :global(.treekit-checkbox-visual--indeterminate) {
+    background: var(--treekit-primary-color);
+    border-color: var(--treekit-primary-color);
+  }
+
+  .page-container :global(.treekit-checkbox-visual--indeterminate::after) {
+    content: '';
+    position: absolute;
+    left: 2px;
+    top: 5px;
+    width: 8px;
+    height: 2px;
+    background: white;
+  }
+
+  /* 节点名称样式 */
+  .page-container :global(.treekit-label) {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 14px;
+  }
+
+  /* 虚拟树容器样式 */
+  .page-container :global(.treekit-virtual) {
+    height: 100%;
+    overflow: auto;
+    position: relative;
+  }
+
+  .page-container :global(.treekit-virtual-spacer) {
+    position: relative;
+    min-height: 100%;
+  }
+
+  .page-container :global(.treekit-virtual-viewport) {
+    position: absolute;
+    width: 100%;
+    left: 0;
+  }
+
+  .page-container :global(.treekit-virtual-sentinel) {
+    position: absolute;
+    height: 1px;
+    width: 100%;
+    pointer-events: none;
   }
 </style>

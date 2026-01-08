@@ -61,6 +61,10 @@ export interface TreeOptions {
   accordion?: boolean;
   /** 启用过滤/搜索功能 */
   filterable?: boolean;
+  /** 启用搜索功能（Web Worker 异步搜索） */
+  searchable?: boolean;
+  /** 启用虚拟滚动（大数据量优化） */
+  virtual?: boolean;
   /** 默认展开的节点 ID 列表 */
   defaultExpandedIds?: string[];
   /** 默认选中的节点 ID 列表 */
@@ -81,6 +85,8 @@ export const defaultTreeOptions: Required<TreeOptions> = {
   checkable: false,
   accordion: false,
   filterable: false,
+  searchable: false,
+  virtual: false,
   defaultExpandedIds: [],
   defaultCheckedIds: [],
   fieldMapper: { ...defaultFieldMapper }

@@ -41,7 +41,7 @@ export function toggleCheck(
  *   - 所有子节点都勾选 → 父节点勾选
  *   - 否则 → 父节点取消（半选由 UI 计算）
  */
-function updateAncestorsCheckState(
+export function updateAncestorsCheckState(
   parentId: string | null,
   flatNodes: FlatNode[],
   checkedSet: Set<string>,
@@ -146,21 +146,15 @@ export function checkNodes(
   }
 
   // 更新所有涉及的祖先
-  const processedAncestors = new Set<string>();
+  const processedAncestors = new Set<string | null>();
   for (const nodeId of nodeIds) {
     const node = index.nodeMap.get(nodeId);
-    if (!node || !node.parentId || processedAncestors.has(node.parentId)) continue;
+    if (!node) continue;
 
-    let currentParentId: string | null = node.parentId;
-    while (currentParentId !== null && !processedAncestors.has(currentParentId)) {
-      processedAncestors.add(currentParentId);
-      const parent = index.nodeMap.get(currentParentId);
-      if (!parent) break;
-
-      if (isSubtreeFullyChecked(parent, flatNodes, newSet)) {
-        newSet.add(currentParentId);
-      }
-      currentParentId = parent.parentId;
+    // 只处理未处理过的祖先根节点
+    if (node.parentId && !processedAncestors.has(node.parentId)) {
+      updateAncestorsCheckState(node.parentId, flatNodes, newSet, index);
+      processedAncestors.add(node.parentId);
     }
   }
 
