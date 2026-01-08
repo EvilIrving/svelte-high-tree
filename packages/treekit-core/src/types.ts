@@ -1,5 +1,18 @@
+// ============ 字段映射配置 ============
+export interface FieldMapper {
+  /** 节点唯一标识字段名，默认 'id' */
+  id?: string;
+  /** 父节点标识字段名，默认 'parentId' */
+  parentId?: string;
+  /** 节点显示名称字段名，默认 'name' */
+  name?: string;
+  /** 子节点列表字段名，默认 'children'（可选） */
+  children?: string;
+}
+
 // ============ 原始数据（后端返回） ============
 export interface RawNode {
+  [key: string]: unknown;
   id: string;
   name: string;
   parentId: string | null;
@@ -43,12 +56,35 @@ export interface SearchResult {
 // ============ Tree 配置 ============
 export interface TreeOptions {
   /** 启用 checkbox 功能 */
-  checkbox?: boolean;
+  checkable?: boolean;
   /** 手风琴模式（同级只展开一个） */
   accordion?: boolean;
-  /** 启用过滤功能 */
+  /** 启用过滤/搜索功能 */
   filterable?: boolean;
+  /** 默认展开的节点 ID 列表 */
+  defaultExpandedIds?: string[];
+  /** 默认选中的节点 ID 列表 */
+  defaultCheckedIds?: string[];
+  /** 字段映射配置 */
+  fieldMapper?: FieldMapper;
 }
+
+// 默认配置常量
+export const defaultFieldMapper: Required<FieldMapper> = {
+  id: 'id',
+  parentId: 'parentId',
+  name: 'name',
+  children: 'children'
+};
+
+export const defaultTreeOptions: Required<TreeOptions> = {
+  checkable: false,
+  accordion: false,
+  filterable: false,
+  defaultExpandedIds: [],
+  defaultCheckedIds: [],
+  fieldMapper: { ...defaultFieldMapper }
+};
 
 // ============ 导出节点状态（供 UI 使用） ============
 export interface NodeStatus {

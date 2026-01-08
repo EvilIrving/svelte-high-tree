@@ -1,5 +1,5 @@
 {
-  "name": "high-tree-svelte",
+  "name": "@light-cat/treekit-svelte",
   "version": "0.0.1",
   "type": "module",
   "main": "./dist/index.js",
@@ -8,6 +8,6 @@
     "svelte": ">=5.0.0"
   },
   "dependencies": {
-    "high-tree-core": "^0.0.1"
+    "@light-cat/treekit-core": "workspace:*"
   }
 }

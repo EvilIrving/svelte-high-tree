@@ -1,4 +1,5 @@
-import type { RawNode, FlatNode, TreeIndex, TreeOptions, NodeStatus } from './types';
+import type { RawNode, FlatNode, TreeIndex, TreeOptions, NodeStatus, FieldMapper } from './types';
+import { defaultTreeOptions, defaultFieldMapper } from './types';
 import { buildFlatTree } from './algorithms/flatten';
 import {
   computeVisibleNodes,
@@ -45,6 +46,7 @@ export class TreeEngine {
   private _filterSet = new Set<string>(); // 过滤显示集合（匹配节点 + 祖先）
   private _matchSet = new Set<string>(); // 精确匹配的节点
   private _options: Required<TreeOptions>;
+  private _fieldMapper: Required<FieldMapper>;
 
   // ========== 订阅系统 ==========
   private _subscribers: Set<() => void> = new Set();
@@ -55,9 +57,19 @@ export class TreeEngine {
 
   constructor(options?: TreeOptions) {
     this._options = {
-      checkbox: options?.checkbox ?? false,
-      accordion: options?.accordion ?? false,
-      filterable: options?.filterable ?? false
+      checkable: options?.checkable ?? defaultTreeOptions.checkable,
+      accordion: options?.accordion ?? defaultTreeOptions.accordion,
+      filterable: options?.filterable ?? defaultTreeOptions.filterable,
+      defaultExpandedIds: options?.defaultExpandedIds ?? defaultTreeOptions.defaultExpandedIds,
+      defaultCheckedIds: options?.defaultCheckedIds ?? defaultTreeOptions.defaultCheckedIds,
+      fieldMapper: options?.fieldMapper ?? defaultTreeOptions.fieldMapper
+    };
+    const mapper = options?.fieldMapper ?? {};
+    this._fieldMapper = {
+      id: mapper.id ?? defaultFieldMapper.id,
+      parentId: mapper.parentId ?? defaultFieldMapper.parentId,
+      name: mapper.name ?? defaultFieldMapper.name,
+      children: mapper.children ?? defaultFieldMapper.children
     };
   }
 
@@ -111,15 +123,18 @@ export class TreeEngine {
 
   /**
    * 初始化树数据
+   * @param rawNodes 原始节点数据
+   * @param fieldMapper 字段映射配置（可选，使用构造函数中的配置）
    */
-  init(rawNodes: RawNode[]): void {
-    const result = buildFlatTree(rawNodes);
+  init(rawNodes: RawNode[], fieldMapper?: FieldMapper): void {
+    const mapper = fieldMapper ?? this._fieldMapper;
+    const result = buildFlatTree(rawNodes, mapper);
     this._flatNodes = result.flatNodes;
     this._index = result.index;
 
     // 重置状态
-    this._expandedSet = new Set();
-    this._checkedSet = new Set();
+    this._expandedSet = new Set(this._options.defaultExpandedIds);
+    this._checkedSet = new Set(this._options.defaultCheckedIds);
     this._filterSet = new Set();
     this._matchSet = new Set();
 
@@ -208,7 +223,7 @@ export class TreeEngine {
     return {
       isExpanded: this._expandedSet.has(nodeId),
       isChecked: this._checkedSet.has(nodeId),
-      isIndeterminate: this._options.checkbox
+      isIndeterminate: this._options.checkable
         ? getCheckState(node, this._flatNodes, this._checkedSet) === 'indeterminate'
         : false,
       isVisible: visibleIndex >= 0,

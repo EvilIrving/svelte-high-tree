@@ -1,22 +1,36 @@
-import type { RawNode, FlatNode, TreeIndex } from '../types';
+import type { RawNode, FlatNode, TreeIndex, FieldMapper } from '../types';
+import { defaultFieldMapper } from '../types';
 
 /**
  * 将邻接表转换为扁平化数组 + 索引结构
  * 时间复杂度: O(n)，空间复杂度: O(n)
+ *
+ * @param rawNodes 原始节点数据（邻接表格式）
+ * @param fieldMapper 字段映射配置（可选，默认使用 id/parentId/name）
  */
-export function buildFlatTree(rawNodes: RawNode[]): {
+export function buildFlatTree(
+  rawNodes: RawNode[],
+  fieldMapper?: FieldMapper
+): {
   flatNodes: FlatNode[];
   index: TreeIndex;
 } {
+  const mapper = { ...defaultFieldMapper, ...fieldMapper };
+  const idKey = mapper.id;
+  const parentIdKey = mapper.parentId;
+  const nameKey = mapper.name;
+
   // Step 1: 构建 childrenMap 和 rawMap
   const childrenMap = new Map<string | null, string[]>();
   const rawMap = new Map<string, RawNode>();
 
   for (const node of rawNodes) {
-    rawMap.set(node.id, node);
-    const siblings = childrenMap.get(node.parentId) ?? [];
-    siblings.push(node.id);
-    childrenMap.set(node.parentId, siblings);
+    const id = String(node[idKey]);
+    const parentId = node[parentIdKey] as string | null;
+    rawMap.set(id, node);
+    const siblings = childrenMap.get(parentId) ?? [];
+    siblings.push(id);
+    childrenMap.set(parentId, siblings);
   }
 
   const rootIds = childrenMap.get(null) ?? [];
@@ -51,9 +65,9 @@ export function buildFlatTree(rawNodes: RawNode[]): {
       const index = flatNodes.length;
 
       const flatNode: FlatNode = {
-        id: raw.id,
-        name: raw.name,
-        parentId: raw.parentId,
+        id: String(raw[idKey]),
+        name: String(raw[nameKey]),
+        parentId: raw[parentIdKey] as string | null,
         depth,
         index,
         subtreeEnd: index, // 先设为自己，后面更新

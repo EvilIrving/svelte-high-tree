@@ -1,4 +1,4 @@
-import { TreeEngine, type RawNode, type TreeOptions, type FlatNode, type NodeStatus } from 'high-tree-core';
+import { TreeEngine, type RawNode, type TreeOptions, type FlatNode, type NodeStatus, type TreeIndex } from '@light-cat/treekit-core';
 
 /**
  * Svelte 适配器 - 将 TreeEngine 转换为 Svelte 响应式状态
@@ -50,6 +50,9 @@ export function createTreeStore(nodes?: RawNode[], options?: TreeOptions) {
     get visibleCount() { return visibleCount; },
     get checkedCount() { return checkedCount; },
     get matchCount() { return matchCount; },
+
+    // 索引
+    get index(): TreeIndex { return engine.index; },
 
     // 状态集
     get expandedSet() { return engine.expandedSet; },

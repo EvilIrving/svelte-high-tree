@@ -1,0 +1,103 @@
+import { defaultFieldMapper } from '../types';
+/**
+ * 将邻接表转换为扁平化数组 + 索引结构
+ * 时间复杂度: O(n)，空间复杂度: O(n)
+ *
+ * @param rawNodes 原始节点数据（邻接表格式）
+ * @param fieldMapper 字段映射配置（可选，默认使用 id/parentId/name）
+ */
+export function buildFlatTree(rawNodes, fieldMapper) {
+    const mapper = { ...defaultFieldMapper, ...fieldMapper };
+    const idKey = mapper.id;
+    const parentIdKey = mapper.parentId;
+    const nameKey = mapper.name;
+    // Step 1: 构建 childrenMap 和 rawMap
+    const childrenMap = new Map();
+    const rawMap = new Map();
+    for (const node of rawNodes) {
+        const id = String(node[idKey]);
+        const parentId = node[parentIdKey];
+        rawMap.set(id, node);
+        const siblings = childrenMap.get(parentId) ?? [];
+        siblings.push(id);
+        childrenMap.set(parentId, siblings);
+    }
+    const rootIds = childrenMap.get(null) ?? [];
+    // Step 2: 迭代 DFS 生成 flatNodes（同时计算 subtreeEnd）
+    const flatNodes = [];
+    const nodeMap = new Map();
+    const indexMap = new Map();
+    const stack = [];
+    // 逆序压入根节点（保证正序处理），栈是 LIFO（后入先出），逆序压入能保证正序处理
+    for (let i = rootIds.length - 1; i >= 0; i--) {
+        stack.push({ id: rootIds[i], depth: 0, phase: 'enter' });
+    }
+    while (stack.length > 0) {
+        const item = stack.pop();
+        const { id, depth, phase } = item;
+        if (phase === 'enter') {
+            // 进入节点：创建 FlatNode
+            const raw = rawMap.get(id);
+            const children = childrenMap.get(id) ?? [];
+            const index = flatNodes.length;
+            const flatNode = {
+                id: String(raw[idKey]),
+                name: String(raw[nameKey]),
+                parentId: raw[parentIdKey],
+                depth,
+                index,
+                subtreeEnd: index, // 先设为自己，后面更新
+                hasChildren: children.length > 0
+            };
+            flatNodes.push(flatNode);
+            nodeMap.set(id, flatNode);
+            indexMap.set(id, index);
+            // 压入退出标记
+            stack.push({ id, depth, phase: 'exit' });
+            // 逆序压入子节点
+            for (let i = children.length - 1; i >= 0; i--) {
+                stack.push({ id: children[i], depth: depth + 1, phase: 'enter' });
+            }
+        }
+        else {
+            // 退出节点：更新 subtreeEnd
+            const node = nodeMap.get(id);
+            // subtreeEnd = 当前数组最后一个元素的索引
+            node.subtreeEnd = flatNodes.length - 1;
+        }
+    }
+    return {
+        flatNodes,
+        index: {
+            nodeMap,
+            indexMap,
+            childrenMap,
+            rootIds
+        }
+    };
+}
+/**
+ * 获取节点的所有祖先 ID（从父节点到根节点）
+ */
+export function getAncestorIds(nodeId, index) {
+    const ancestors = [];
+    let currentId = index.nodeMap.get(nodeId)?.parentId ?? null;
+    while (currentId !== null) {
+        ancestors.push(currentId);
+        currentId = index.nodeMap.get(currentId)?.parentId ?? null;
+    }
+    return ancestors;
+}
+/**
+ * 获取子树中所有节点 ID（利用 subtreeEnd）
+ */
+export function getSubtreeIds(nodeId, flatNodes, index) {
+    const node = index.nodeMap.get(nodeId);
+    if (!node)
+        return [];
+    const ids = [];
+    for (let i = node.index; i <= node.subtreeEnd; i++) {
+        ids.push(flatNodes[i].id);
+    }
+    return ids;
+}

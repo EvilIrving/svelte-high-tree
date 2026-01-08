@@ -302,6 +302,7 @@
         expandedSet={treeManager.expandedSet}
         checkedSet={treeManager.checkedSet}
         searchMatchSet={treeManager.searchMatchSet}
+        showCheckbox={false}
         currentMatchId={searchNavigator.currentId}
         index={treeManager.index}
         itemHeight={32}

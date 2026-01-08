@@ -1,5 +1,5 @@
 import type { RawNode, FlatNode, CheckState, SearchResult } from './types';
-import { createTreeStore, type TreeOptions } from 'high-tree-svelte';
+import { createTreeStore, type TreeOptions } from '@light-cat/treekit-svelte';
 
 /**
  * Tree 管理器
@@ -32,6 +32,10 @@ export class TreeManager {
 
   get visibleList(): FlatNode[] {
     return this.store.visibleList;
+  }
+
+  get index() {
+    return this.store.index;
   }
 
   get totalNodeCount(): number {

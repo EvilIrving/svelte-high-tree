@@ -18,8 +18,8 @@ const config = {
 		adapter: adapter(),
 
 		alias: {
-			'high-tree-core': resolve(__dirname, 'packages/core/src/index.ts'),
-			'high-tree-svelte': resolve(__dirname, 'packages/svelte-adapter/src/index.ts')
+			'@light-cat/treekit-core': resolve(__dirname, 'packages/treekit-core/src/index.ts'),
+			'@light-cat/treekit-svelte': resolve(__dirname, 'packages/treekit-svelte/src/index.ts')
 		}
 	}
 };

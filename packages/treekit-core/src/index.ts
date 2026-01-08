@@ -1,6 +1,14 @@
 // Types
-export type { RawNode, FlatNode, TreeIndex, TreeOptions, NodeStatus } from './types';
-export type { CheckState } from './TreeEngine';
+export type {
+  RawNode,
+  FlatNode,
+  TreeIndex,
+  TreeOptions,
+  NodeStatus,
+  FieldMapper,
+  CheckState
+} from './types';
+export { defaultTreeOptions } from './types';
 
 // Core
 export { TreeEngine } from './TreeEngine';

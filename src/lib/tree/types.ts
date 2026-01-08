@@ -1,5 +1,6 @@
 // ============ 原始数据（后端返回） ============
 export interface RawNode {
+  [key: string]: unknown;
   id: string;
   name: string;
   parentId: string | null;

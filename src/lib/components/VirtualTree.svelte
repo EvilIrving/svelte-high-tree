@@ -13,6 +13,7 @@
     expandedSet: Set<string>;
     checkedSet: Set<string>;
     searchMatchSet: Set<string>;
+    showCheckbox?: boolean;
     currentMatchId?: string | null;
     index: TreeIndex;
     itemHeight?: number;
@@ -26,6 +27,7 @@
     expandedSet,
     checkedSet,
     searchMatchSet,
+    showCheckbox = false,
     currentMatchId = null,
     index,
     itemHeight = 32,
@@ -121,6 +123,7 @@
           {node}
           isExpanded={expandedSet.has(node.id)}
           checkState={getNodeCheckState(node)}
+          {showCheckbox}
           isSearchMatch={searchMatchSet.has(node.id)}
           isCurrent={currentMatchId === node.id}
           {itemHeight}

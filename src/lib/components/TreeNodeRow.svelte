@@ -5,6 +5,7 @@
     node: FlatNode;
     isExpanded: boolean;
     checkState: CheckState;
+    showCheckbox?: boolean;
     isSearchMatch: boolean;
     isCurrent?: boolean;
     itemHeight: number;
@@ -17,6 +18,7 @@
     node,
     isExpanded,
     checkState,
+    showCheckbox = false,
     isSearchMatch,
     isCurrent = false,
     itemHeight,
@@ -26,7 +28,7 @@
   }: Props = $props();
 
   // 计算缩进
-  let indent = $derived(node.depth * indentSize);
+  let indent = $derived(node.depth * indentSize + (showCheckbox ? 0 : 20));
 </script>
 
 <div
@@ -53,16 +55,18 @@
     {/if}
   </button>
 
-  <!-- 复选框 -->
-  <label class="checkbox-wrapper">
-    <input
-      type="checkbox"
-      checked={checkState === 'checked'}
-      indeterminate={checkState === 'indeterminate'}
-      onchange={onToggleCheck}
-    />
-    <span class="checkbox-visual" class:indeterminate={checkState === 'indeterminate'}></span>
-  </label>
+  {#if showCheckbox}
+    <!-- 复选框 -->
+    <label class="checkbox-wrapper">
+      <input
+        type="checkbox"
+        checked={checkState === 'checked'}
+        indeterminate={checkState === 'indeterminate'}
+        onchange={onToggleCheck}
+      />
+      <span class="checkbox-visual" class:indeterminate={checkState === 'indeterminate'}></span>
+    </label>
+  {/if}
 
   <!-- 节点名称 -->
   <span class="node-name" title={node.name}>

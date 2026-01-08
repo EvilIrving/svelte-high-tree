@@ -1,0 +1,23 @@
+{
+  "name": "@light-cat/treekit-core",
+  "version": "0.0.1",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js"
+    }
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/actor/svelte-high-tree",
+    "directory": "packages/treekit-core"
+  },
+  "author": "actor",
+  "license": "MIT",
+  "keywords": [
+    "tree",
+    "tree-structure"
+  ]
+}
