@@ -6,6 +6,7 @@
     isExpanded: boolean;
     checkState: CheckState;
     isSearchMatch: boolean;
+    isCurrent?: boolean;
     itemHeight: number;
     indentSize?: number;
     onToggleExpand: () => void;
@@ -17,6 +18,7 @@
     isExpanded,
     checkState,
     isSearchMatch,
+    isCurrent = false,
     itemHeight,
     indentSize = 20,
     onToggleExpand,
@@ -30,6 +32,7 @@
 <div
   class="tree-node-row"
   class:search-match={isSearchMatch}
+  class:current-match={isCurrent}
   style="height: {itemHeight}px; padding-left: {indent}px;"
 >
   <!-- 展开/收起按钮 -->
@@ -88,6 +91,15 @@
 
   .tree-node-row.search-match:hover {
     background-color: #fff1b8;
+  }
+
+  .tree-node-row.current-match {
+    background-color: #bae7ff;
+    box-shadow: inset 0 0 0 2px #1890ff;
+  }
+
+  .tree-node-row.current-match:hover {
+    background-color: #91d5ff;
   }
 
   .expand-btn {

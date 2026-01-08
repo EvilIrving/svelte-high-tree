@@ -22,8 +22,9 @@
 |------|------|
 | 🔥 **虚拟滚动** | 基于 IntersectionObserver，仅渲染可见区域 |
 | 🔍 **模糊搜索** | Web Worker 异步搜索 + 倒排索引加速，支持过滤模式 |
-| ☑️ **复选框** | 支持全选/半选/取消，父子联动 |
+| ✅️ **复选框** | 支持全选/半选/取消，父子联动 |
 | 📂 **展开/收起** | 批量操作整棵子树，O(1) 子树定位 |
+| 🔀 **搜索导航** | 上一个/下一个跳转，支持循环，自动展开祖先节点 |
 | ⚡ **扁平化渲染** | 非嵌套结构，避免递归渲染性能问题 |
 
 ### 技术栈
@@ -348,6 +349,50 @@ class VirtualListController {
 └──────────────┘              └──────────────┘
 ```
 
+### 6. 搜索结果导航 (search-navigator.svelte.ts)
+
+支持类似浏览器 F12 的上一个/下一个跳转功能：
+
+```typescript
+// 创建配置
+const searchConfig = createSearchConfig({
+  enableNavigation: true,  // 启用导航
+  enableLoop: true,        // 循环跳转
+  showCount: true          // 显示 3/15 计数
+});
+
+// 创建导航器
+const navigator = new SearchNavigator(searchConfig);
+navigator.init(treeManager.flatNodes, treeManager.index);
+
+// 搜索回调中更新导航器
+searchController.onResult = (result) => {
+  treeManager.applySearchResult(result);
+  const navResult = navigator.updateMatches(result.matchIds);
+  if (navResult.id) {
+    treeManager.expandedSet = expandMultiple(navResult.expandIds, treeManager.expandedSet);
+    virtualTree.scrollToNode(navResult.id);
+  }
+};
+
+// 上一个/下一个
+function handleNext() {
+  const result = navigator.next();
+  if (result.id) {
+    treeManager.expandedSet = expandMultiple(result.expandIds, treeManager.expandedSet);
+    virtualTree.scrollToNode(result.id);
+  } else if (!result.success) {
+    // 已到边界，可显示提示
+  }
+}
+```
+
+**特性**：
+- 按 `flatNodes` 顺序排列匹配项
+- 跳转时自动展开祖先节点
+- 支持循环跳转（可配置）
+- 提供响应式计数属性（`current`/`total`）
+
 **倒排索引**：
 
 ```typescript
@@ -569,6 +614,39 @@ for (const node of data) {
 | `ready` | `boolean` | Worker 是否就绪 |
 | `destroy()` | `void` | 销毁 Worker |
 
+### SearchConfig
+
+| 属性 | 类型 | 默认值 | 描述 |
+|------|------|------|------|
+| `enableNavigation` | `boolean` | `true` | 是否启用搜索结果跳转导航 |
+| `enableLoop` | `boolean` | `true` | 上一个/下一个是否支持循环 |
+| `showCount` | `boolean` | `true` | 是否提供计数（current/total） |
+| `debounceMs` | `number` | `200` | 搜索防抖时间（ms） |
+
+### SearchNavigator
+
+| 属性/方法 | 类型 | 描述 |
+|-----------|------|------|
+| `init(flatNodes, index)` | `void` | 初始化数据源 |
+| `updateMatches(matchIds)` | `NavigateResult` | 更新匹配列表，默认选中第一个 |
+| `next()` | `NavigateResult` | 跳转到下一个匹配项 |
+| `prev()` | `NavigateResult` | 跳转到上一个匹配项 |
+| `goTo(index)` | `NavigateResult` | 跳转到指定索引 |
+| `reset()` | `void` | 重置导航状态 |
+| `currentId` | `string \| null` | 当前聚焦的节点 ID |
+| `currentIndex` | `number` | 当前索引（0-based） |
+| `hasMatches` | `boolean` | 是否有匹配结果 |
+| `current` | `number \| undefined` | 当前位置（1-based，仅 showCount 开启时） |
+| `total` | `number \| undefined` | 匹配总数（仅 showCount 开启时） |
+
+### NavigateResult
+
+| 属性 | 类型 | 描述 |
+|------|------|------|
+| `id` | `string \| null` | 当前节点 ID |
+| `expandIds` | `Set<string>` | 需要展开的祖先节点 ID |
+| `success` | `boolean` | 是否成功导航（到边界且不循环时为 false） |
+
 ### VirtualTree Props
 
 | Prop | 类型 | 必填 | 描述 |
@@ -578,6 +656,7 @@ for (const node of data) {
 | `expandedSet` | `Set<string>` | ✓ | 展开状态 |
 | `checkedSet` | `Set<string>` | ✓ | 勾选状态 |
 | `searchMatchSet` | `Set<string>` | ✓ | 搜索匹配集合 |
+| `currentMatchId` | `string \| null` | | 当前聚焦的匹配节点 ID |
 | `index` | `TreeIndex` | ✓ | 索引结构 |
 | `itemHeight` | `number` | | 行高（默认 32） |
 | `onToggleExpand` | `(id) => void` | ✓ | 展开回调 |
@@ -604,6 +683,8 @@ src/lib/tree/
 ├── virtual-list.ts       # 虚拟列表控制器
 ├── search.worker.ts      # Web Worker 搜索
 ├── search-controller.ts  # 搜索控制器
+├── search-config.ts      # 搜索配置
+├── search-navigator.svelte.ts # 搜索结果导航器
 ├── tree-manager.svelte.ts# 状态管理器
 ├── test-data.ts          # 测试数据生成器
 └── index.ts              # 统一导出
@@ -619,6 +700,7 @@ src/lib/components/
 
 - **v1.0.0** - 初始版本，支持基本的展开/勾选/虚拟滚动
 - **v1.1.0** - 添加搜索过滤模式，搜索结果自动展开祖先路径
+- **v1.2.0** - 添加搜索结果导航功能（上一个/下一个跳转、循环、计数、当前项高亮）
 
 ---
 

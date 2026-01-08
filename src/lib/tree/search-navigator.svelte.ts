@@ -23,9 +23,10 @@ export class SearchNavigator {
   private config: SearchConfig;
   private flatNodes: FlatNode[] = [];
   private index: TreeIndex | null = null;
-  private _matchList: string[] = []; // 按 flatNodes 顺序的匹配 ID 列表
 
   // ========== 响应式状态 ==========
+
+  private _matchList = $state.raw<string[]>([]); // 按 flatNodes 顺序的匹配 ID 列表
   private _currentIndex = $state(-1);
 
   constructor(config: SearchConfig) {

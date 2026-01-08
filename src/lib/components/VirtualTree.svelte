@@ -2,7 +2,9 @@
   import { onMount, onDestroy } from 'svelte';
   import type { FlatNode, TreeIndex, VirtualListState } from '$lib/tree/types';
   import { VirtualListController } from '$lib/tree/virtual-list';
-  import { getCheckState } from '$lib/tree/checkbox';
+  import { getCheckState
+    
+   } from '$lib/tree/checkbox';
   import TreeNodeRow from './TreeNodeRow.svelte';
 
   interface Props {
@@ -11,6 +13,7 @@
     expandedSet: Set<string>;
     checkedSet: Set<string>;
     searchMatchSet: Set<string>;
+    currentMatchId?: string | null;
     index: TreeIndex;
     itemHeight?: number;
     onToggleExpand: (nodeId: string) => void;
@@ -23,6 +26,7 @@
     expandedSet,
     checkedSet,
     searchMatchSet,
+    currentMatchId = null,
     index,
     itemHeight = 32,
     onToggleExpand,
@@ -118,6 +122,7 @@
           isExpanded={expandedSet.has(node.id)}
           checkState={getNodeCheckState(node)}
           isSearchMatch={searchMatchSet.has(node.id)}
+          isCurrent={currentMatchId === node.id}
           {itemHeight}
           onToggleExpand={() => onToggleExpand(node.id)}
           onToggleCheck={() => onToggleCheck(node.id)}
