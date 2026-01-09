@@ -88,7 +88,7 @@ function isSubtreeFullyChecked(
 function isSubtreeHasAnyChecked(
   node: FlatNode,
   flatNodes: FlatNode[],
-  checkedSet: Set<string>
+  checkedSet: ReadonlySet<string>
 ): boolean {
   for (let i = node.index + 1; i <= node.subtreeEnd; i++) {
     if (checkedSet.has(flatNodes[i].id)) {
@@ -104,7 +104,7 @@ function isSubtreeHasAnyChecked(
 export function getCheckState(
   node: FlatNode,
   flatNodes: FlatNode[],
-  checkedSet: Set<string>
+  checkedSet: ReadonlySet<string>
 ): CheckState {
   // 自身已勾选
   if (checkedSet.has(node.id)) {
