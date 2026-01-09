@@ -36,3 +36,15 @@ export {
   uncheckAll,
   getCheckedLeafIds
 } from './algorithms/checkbox';
+
+// Virtual List
+export {
+  VirtualListController,
+  calculateVisibleRange,
+  type VirtualListState,
+  getNodeCheckState
+} from './virtual-list';
+
+// Search
+export { SearchController, searchSync, type SearchResult } from './search';
+export { defaultSearchConfig, createSearchConfig, type SearchConfig } from './search-config';

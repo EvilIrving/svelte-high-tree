@@ -2,7 +2,7 @@
   import { onMount, onDestroy } from 'svelte';
   import type { FlatNode, TreeIndex, CheckState } from '@light-cat/treekit-core';
   import TreeNode from './TreeNode.svelte';
-  import { VirtualListController, getNodeCheckState, type VirtualListState } from './virtual-list';
+  import { VirtualListController, getNodeCheckState, type VirtualListState } from '@light-cat/treekit-core';
 
   interface Props {
     visibleList: FlatNode[];
@@ -86,6 +86,7 @@
     });
 
     controller.init(containerRef, topSentinelRef, bottomSentinelRef);
+    controller.setFindIndexById((nodeId) => visibleList.findIndex((n) => n.id === nodeId));
     controller.updateVisibleList(visibleList);
   });
 

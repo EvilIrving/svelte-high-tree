@@ -1,5 +1,5 @@
 import type { FlatNode, TreeIndex } from '@light-cat/treekit-core';
-import type { SearchConfig } from './search-config';
+import type { SearchConfig } from '@light-cat/treekit-core';
 
 /**
  * 导航结果

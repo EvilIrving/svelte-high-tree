@@ -1,5 +1,5 @@
-import type { FlatNode } from '@light-cat/treekit-core';
-import { getCheckState } from '@light-cat/treekit-core';
+import type { FlatNode } from './types';
+import { getCheckState } from './algorithms';
 
 // 重新导出 core 的 getCheckState 作为 getNodeCheckState（兼容旧代码）
 export { getCheckState as getNodeCheckState };
@@ -17,7 +17,7 @@ export interface VirtualListState {
  * 虚拟列表控制器
  * 使用 IntersectionObserver 实现高性能虚拟滚动
  */
-export class VirtualListController {
+export class VirtualListController<T = FlatNode> {
   private container: HTMLElement | null = null;
   private topSentinel: HTMLElement | null = null;
   private bottomSentinel: HTMLElement | null = null;
@@ -25,7 +25,7 @@ export class VirtualListController {
 
   private itemHeight: number;
   private bufferSize: number;
-  private visibleList: FlatNode[] = [];
+  private visibleList: T[] = [];
 
   private state: VirtualListState = {
     startIndex: 0,
@@ -77,9 +77,21 @@ export class VirtualListController {
   /**
    * 更新可见列表
    */
-  updateVisibleList(visibleList: FlatNode[]): void {
-    this.visibleList = visibleList;
+  updateVisibleList(list: T[]): void {
+    this.visibleList = list;
     this.recalculate();
+  }
+
+  /**
+   * 查找节点索引的回调（用于 scrollToNode）
+   */
+  private findIndexById: ((id: string) => number) | null = null;
+
+  /**
+   * 设置查找节点索引的回调（用于 scrollToNode）
+   */
+  setFindIndexById(fn: (id: string) => number): void {
+    this.findIndexById = fn;
   }
 
   /**
@@ -134,11 +146,31 @@ export class VirtualListController {
   }
 
   /**
-   * 滚动到指定节点
+   * 滚动到指定节点（需要先设置 setFindIndexById）
    */
   scrollToNode(nodeId: string): void {
-    const index = this.visibleList.findIndex((n) => n.id === nodeId);
-    if (index === -1 || !this.container) return;
+    if (!this.findIndexById || !this.container) return;
+
+    const index = this.findIndexById(nodeId);
+    if (index === -1) return;
+
+    const targetTop = index * this.itemHeight;
+    const viewportHeight = this.container.clientHeight;
+
+    // 如果节点在视口外，滚动到居中位置
+    const currentScrollTop = this.container.scrollTop;
+    if (targetTop < currentScrollTop || targetTop > currentScrollTop + viewportHeight) {
+      this.container.scrollTop = targetTop - viewportHeight / 2 + this.itemHeight / 2;
+    }
+
+    this.recalculate();
+  }
+
+  /**
+   * 滚动到指定索引
+   */
+  scrollToIndex(index: number): void {
+    if (index < 0 || index >= this.visibleList.length || !this.container) return;
 
     const targetTop = index * this.itemHeight;
     const viewportHeight = this.container.clientHeight;

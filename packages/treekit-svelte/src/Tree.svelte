@@ -4,9 +4,9 @@
   import { expandMultiple } from '@light-cat/treekit-core';
   import { createTree } from './createTree.svelte';
   import VirtualTree from './VirtualTree.svelte';
-  import { SearchController } from './search';
+  import { SearchController } from '@light-cat/treekit-core';
   import { SearchNavigator } from './search-navigator.svelte';
-  import { createSearchConfig } from './search-config';
+  import { createSearchConfig } from '@light-cat/treekit-core';
 
   // ============ Props 定义 ============
   interface Props {

@@ -24,12 +24,21 @@ export class SearchController {
 
   /**
    * 初始化 Worker
+   * @param searchData 搜索数据，需要包含 id, name, parentId 字段
    */
-  init(searchData: Array<{ id: string; name: string; parentId: string | null }>): void {
-    // 使用 Vite 的 Worker 加载
-    this.worker = new Worker(new URL('./search.worker.ts', import.meta.url), {
-      type: 'module'
-    });
+  init(
+    searchData: Array<{ id: string; name: string; parentId: string | null }>,
+    workerUrl?: string
+  ): void {
+    // 支持自定义 worker URL（便于不同框架使用）
+    const url = workerUrl ?? new URL('./search.worker.ts', import.meta.url);
+
+    // 检查是否是 data URL（内联 worker），如果是则直接使用
+    if (url.protocol === 'data:') {
+      this.worker = new Worker(url, { type: 'module' });
+    } else {
+      this.worker = new Worker(url, { type: 'module' });
+    }
 
     this.worker.onmessage = (e: MessageEvent) => {
       const { type, payload } = e.data;
