@@ -1,12 +1,52 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
-  import { TreeManager, generateOrderedTestData, createSearchConfig, SearchNavigator } from '$lib/tree';
-  import { SearchController } from '$lib/tree/search-controller';
-  import { expandMultiple } from '$lib/tree/visibility';
-  import VirtualTree from '$lib/components/VirtualTree.svelte';
+  import {
+    createTree,
+    VirtualTree,
+    SearchController,
+    SearchNavigator,
+    createSearchConfig
+  } from '@light-cat/treekit-svelte';
+  import { expandMultiple, type RawNode } from '@light-cat/treekit-core';
+
+  /**
+   * 生成有序的测试数据
+   */
+  function generateOrderedTestData(
+    nodeCount: number,
+    branchingFactor: number = 3,
+    maxDepth: number = 10
+  ): RawNode[] {
+    const nodes: RawNode[] = [];
+    let currentId = 0;
+
+    function generate(parentId: string | null, depth: number): void {
+      if (currentId >= nodeCount) return;
+
+      const id = String(currentId++);
+      nodes.push({
+        id,
+        name: `Node-${id.padStart(5, '0')}`,
+        parentId
+      });
+
+      if (depth < maxDepth) {
+        for (let i = 0; i < branchingFactor && currentId < nodeCount; i++) {
+          generate(id, depth + 1);
+        }
+      }
+    }
+
+    // 创建多个根
+    for (let i = 0; i < branchingFactor && currentId < nodeCount; i++) {
+      generate(null, 0);
+    }
+
+    return nodes;
+  }
 
   // 树管理器
-  const treeManager = new TreeManager();
+  const tree = createTree();
 
   // 搜索配置
   const searchConfig = createSearchConfig({
@@ -20,6 +60,9 @@
 
   // 搜索导航器
   const searchNavigator = new SearchNavigator(searchConfig);
+
+  // 搜索关键词
+  let searchKeyword = $state('');
 
   // 节点数量选项
   const nodeCounts = [1000, 5000, 10000, 30000, 50000];
@@ -45,18 +88,19 @@
     const rawNodes = generateOrderedTestData(nodeCount, 5, 15);
 
     // 初始化树
-    treeManager.init(rawNodes);
+    tree.init(rawNodes);
 
     // 初始化搜索
     searchController?.destroy();
     searchController = new SearchController({
       debounceMs: searchConfig.debounceMs,
       onResult: (result) => {
-        treeManager.applySearchResult(result);
+        // 应用搜索结果到树
+        tree.setSearch(searchKeyword);
         // 更新导航器并跳转到第一个匹配项
         const navResult = searchNavigator.updateMatches(result.matchIds);
         if (navResult.id) {
-          treeManager.setExpandedSet(expandMultiple(navResult.expandIds, treeManager.expandedSet));
+          tree.setExpandedSet(expandMultiple(new Set(navResult.expandIds), new Set(tree.expandedSet)));
           // 延迟滚动，等待 DOM 更新
           requestAnimationFrame(() => {
             virtualTreeRef?.scrollToNode(navResult.id!);
@@ -67,7 +111,7 @@
     searchController.init(rawNodes);
 
     // 初始化导航器
-    searchNavigator.init(treeManager.flatNodes, treeManager.index);
+    searchNavigator.init(tree.flatNodes, tree.index);
 
     initTime = Math.round(performance.now() - startTime);
     searchInput = '';
@@ -79,10 +123,10 @@
   function handleSearch(e: Event): void {
     const keyword = (e.target as HTMLInputElement).value;
     searchInput = keyword;
-    treeManager.searchKeyword = keyword;
+    searchKeyword = keyword;
 
     if (keyword.trim() === '') {
-      treeManager.clearSearch();
+      tree.clearFilter();
     } else {
       searchController?.search(keyword);
     }
@@ -93,7 +137,8 @@
    */
   function clearSearch(): void {
     searchInput = '';
-    treeManager.clearSearch();
+    searchKeyword = '';
+    tree.clearFilter();
     searchController?.clear();
     searchNavigator.reset();
   }
@@ -104,7 +149,7 @@
   function handleNextMatch(): void {
     const result = searchNavigator.next();
     if (result.id) {
-      treeManager.setExpandedSet(expandMultiple(result.expandIds, treeManager.expandedSet));
+      tree.setExpandedSet(expandMultiple(new Set(result.expandIds), new Set(tree.expandedSet)));
       requestAnimationFrame(() => {
         virtualTreeRef?.scrollToNode(result.id!);
       });
@@ -117,7 +162,7 @@
   function handlePrevMatch(): void {
     const result = searchNavigator.prev();
     if (result.id) {
-      treeManager.setExpandedSet(expandMultiple(result.expandIds, treeManager.expandedSet));
+      tree.setExpandedSet(expandMultiple(new Set(result.expandIds), new Set(tree.expandedSet)));
       requestAnimationFrame(() => {
         virtualTreeRef?.scrollToNode(result.id!);
       });
@@ -129,7 +174,7 @@
    */
   function expandToDepth(depth: number): void {
     const startTime = performance.now();
-    treeManager.expandToDepth(depth);
+    tree.expandToDepth(depth);
     lastActionTime = Math.round(performance.now() - startTime);
   }
 
@@ -138,7 +183,7 @@
    */
   function expandAll(): void {
     const startTime = performance.now();
-    treeManager.expandAll();
+    tree.expandAll();
     lastActionTime = Math.round(performance.now() - startTime);
   }
 
@@ -147,7 +192,7 @@
    */
   function collapseAll(): void {
     const startTime = performance.now();
-    treeManager.collapseAll();
+    tree.collapseAll();
     lastActionTime = Math.round(performance.now() - startTime);
   }
 
@@ -156,7 +201,7 @@
    */
   function checkAll(): void {
     const startTime = performance.now();
-    treeManager.checkAll();
+    tree.checkAll();
     lastActionTime = Math.round(performance.now() - startTime);
   }
 
@@ -165,25 +210,31 @@
    */
   function uncheckAll(): void {
     const startTime = performance.now();
-    treeManager.uncheckAll();
+    tree.uncheckAll();
     lastActionTime = Math.round(performance.now() - startTime);
   }
 
   /**
-   * 切换展开
+   * 切换展开 (接收 nodeId)
    */
   function handleToggleExpand(nodeId: string): void {
     const startTime = performance.now();
-    treeManager.toggleExpand(nodeId);
+    const visibleIndex = tree.getVisibleIndex(nodeId);
+    if (visibleIndex >= 0) {
+      tree.toggle(visibleIndex);
+    }
     lastActionTime = Math.round(performance.now() - startTime);
   }
 
   /**
-   * 切换勾选
+   * 切换勾选 (接收 nodeId)
    */
   function handleToggleCheck(nodeId: string): void {
     const startTime = performance.now();
-    treeManager.toggleCheck(nodeId);
+    const visibleIndex = tree.getVisibleIndex(nodeId);
+    if (visibleIndex >= 0) {
+      tree.toggleCheck(visibleIndex);
+    }
     lastActionTime = Math.round(performance.now() - startTime);
   }
 
@@ -193,6 +244,7 @@
 
   onDestroy(() => {
     searchController?.destroy();
+    tree.destroy();
   });
 </script>
 
@@ -275,15 +327,15 @@
         <button onclick={checkAll}>全选</button>
         <button onclick={uncheckAll}>全不选</button>
       </div>
-      <span class="check-count">已选: {treeManager.checkedCount} 个</span>
+      <span class="check-count">已选: {tree.checkedCount} 个</span>
     </div>
   </div>
 
   <!-- 统计信息 -->
   <div class="stats-bar">
-    <span>总节点: <strong>{treeManager.totalNodeCount.toLocaleString()}</strong></span>
-    <span>可见节点: <strong>{treeManager.visibleNodeCount.toLocaleString()}</strong></span>
-    <span>已展开: <strong>{treeManager.expandedSet.size}</strong></span>
+    <span>总节点: <strong>{tree.totalCount.toLocaleString()}</strong></span>
+    <span>可见节点: <strong>{tree.visibleCount.toLocaleString()}</strong></span>
+    <span>已展开: <strong>{tree.expandedSet.size}</strong></span>
     <span>初始化耗时: <strong>{initTime}ms</strong></span>
     {#if lastActionTime > 0}
       <span>操作耗时: <strong>{lastActionTime}ms</strong></span>
@@ -292,24 +344,20 @@
 
   <!-- 树容器 -->
   <div class="tree-container">
-    {#if treeManager.isLoading}
-      <div class="loading">加载中...</div>
-    {:else}
-      <VirtualTree
-        bind:this={virtualTreeRef}
-        visibleList={treeManager.visibleList}
-        flatNodes={treeManager.flatNodes}
-        expandedSet={treeManager.expandedSet}
-        checkedSet={treeManager.checkedSet}
-        searchMatchSet={treeManager.searchMatchSet}
-        showCheckbox={false}
-        currentMatchId={searchNavigator.currentId}
-        index={treeManager.index}
-        itemHeight={32}
-        onToggleExpand={handleToggleExpand}
-        onToggleCheck={handleToggleCheck}
-      />
-    {/if}
+    <VirtualTree
+      bind:this={virtualTreeRef}
+      visibleList={tree.visibleList}
+      flatNodes={tree.flatNodes}
+      expandedSet={new Set(tree.expandedSet)}
+      checkedSet={new Set(tree.checkedSet)}
+      matchSet={tree.matchSet ? new Set(tree.matchSet) : undefined}
+      showCheckbox={false}
+      currentMatchId={searchNavigator.currentId}
+      index={tree.index}
+      itemHeight={32}
+      onToggleExpand={handleToggleExpand}
+      onToggleCheck={handleToggleCheck}
+    />
   </div>
 </div>
 
@@ -424,10 +472,14 @@
     color: #333;
   }
 
-  .match-count,
   .check-count {
     font-size: 13px;
     color: #1890ff;
+  }
+
+  .control-label {
+    font-size: 13px;
+    color: #666;
   }
 
   .search-nav {
@@ -489,14 +541,6 @@
     overflow: hidden;
     background: white;
     min-height: 400px;
-  }
-
-  .loading {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 100%;
-    color: #999;
   }
 
   /* ========== Headless Tree 自定义样式 ==========

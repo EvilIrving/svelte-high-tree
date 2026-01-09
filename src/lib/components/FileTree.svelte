@@ -1,8 +1,7 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
-  import type { FlatDisplayNode, DisplayTreeIndex } from '$lib/file-tree/types';
-  import type { VirtualListState } from '$lib/tree/types';
-  import { VirtualListController } from '$lib/tree/virtual-list';
+  import type { FlatDisplayNode, DisplayTreeIndex, VirtualListState } from '$lib/file-tree/types';
+  import { VirtualListController } from '$lib/file-tree/virtual-list';
   import FileNodeRow from './FileNodeRow.svelte';
 
   interface Props {

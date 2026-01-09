@@ -1,4 +1,4 @@
-import type { FlatNode, VirtualListState } from './types';
+import type { FlatDisplayNode, VirtualListState } from './types';
 
 /**
  * 虚拟列表控制器
@@ -12,7 +12,7 @@ export class VirtualListController {
 
   private itemHeight: number;
   private bufferSize: number;
-  private visibleList: FlatNode[] = [];
+  private visibleList: FlatDisplayNode[] = [];
 
   private state: VirtualListState = {
     startIndex: 0,
@@ -64,7 +64,7 @@ export class VirtualListController {
   /**
    * 更新可见列表
    */
-  updateVisibleList(visibleList: FlatNode[]): void {
+  updateVisibleList(visibleList: FlatDisplayNode[]): void {
     this.visibleList = visibleList;
     this.recalculate();
   }

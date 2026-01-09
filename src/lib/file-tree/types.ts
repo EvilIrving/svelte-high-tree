@@ -55,3 +55,10 @@ export interface DisplayTreeIndex {
   childrenMap: Map<string | null, string[]>;
   rootIds: string[];
 }
+
+// ============ 虚拟列表状态 ============
+export interface VirtualListState {
+  startIndex: number;
+  endIndex: number;
+  offsetTop: number;
+}

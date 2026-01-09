@@ -1,5 +1,12 @@
 // Types
-export type { FileEvent, SourceNode, DisplayNode, FlatDisplayNode, DisplayTreeIndex } from './types';
+export type {
+  FileEvent,
+  SourceNode,
+  DisplayNode,
+  FlatDisplayNode,
+  DisplayTreeIndex,
+  VirtualListState
+} from './types';
 
 // Source Store
 export { SourceTreeStore } from './source-store';
@@ -9,6 +16,9 @@ export { buildDisplayTree, buildCompressedChain, findDisplayIdBySourceId } from 
 
 // Flatten
 export { flattenDisplayNodes, computeVisibleDisplayNodes } from './flatten-display';
+
+// Virtual List
+export { VirtualListController, calculateVisibleRange } from './virtual-list';
 
 // Manager
 export { CompressedTreeManager, createCompressedTreeManager } from './compressed-manager.svelte';
