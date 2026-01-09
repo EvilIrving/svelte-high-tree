@@ -543,6 +543,16 @@
     background-color: #91d5ff;
   }
 
+  /* 选中状态样式（单选） */
+  .page-container :global(.treekit-node[data-selected="true"]) {
+    background-color: var(--treekit-bg-selected, #e6f7ff);
+    color: var(--treekit-primary-color);
+  }
+
+  .page-container :global(.treekit-node[data-selected="true"]:hover) {
+    background-color: var(--treekit-bg-selected-hover, #bae7ff);
+  }
+
   /* 展开按钮样式 */
   .page-container :global(.treekit-expand) {
     display: flex;

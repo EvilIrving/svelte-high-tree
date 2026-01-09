@@ -13,10 +13,12 @@
     showCheckbox?: boolean;
     checkStrictly?: boolean;
     currentMatchId?: string | null;
+    selectedId?: string | null;
     index: TreeIndex;
     itemHeight?: number;
     onToggleExpand: (nodeId: string) => void;
     onToggleCheck: (nodeId: string) => void;
+    onNodeClick: (nodeId: string) => void;
   }
 
   let {
@@ -28,10 +30,12 @@
     showCheckbox = false,
     checkStrictly = false,
     currentMatchId = null,
+    selectedId = null,
     index,
     itemHeight = 32,
     onToggleExpand,
-    onToggleCheck
+    onToggleCheck,
+    onNodeClick
   }: Props = $props();
 
   /**
@@ -136,9 +140,11 @@
           {showCheckbox}
           isMatch={matchSet?.has(node.id)}
           isCurrent={currentMatchId === node.id}
+          isSelected={selectedId === node.id}
           {itemHeight}
           onToggleExpand={() => onToggleExpand(node.id)}
           onToggleCheck={() => onToggleCheck(node.id)}
+          onNodeClick={() => onNodeClick(node.id)}
         />
       {/each}
     </div>

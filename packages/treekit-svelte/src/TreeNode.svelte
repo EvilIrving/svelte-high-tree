@@ -14,6 +14,8 @@
     isMatch?: boolean;
     /** 是否当前导航项 */
     isCurrent?: boolean;
+    /** 是否选中（单选） */
+    isSelected?: boolean;
     /** 行高 */
     itemHeight?: number;
     /** 缩进宽度 */
@@ -24,6 +26,8 @@
     onToggleExpand?: () => void;
     /** 勾选事件 */
     onToggleCheck?: () => void;
+    /** 节点点击事件 */
+    onNodeClick?: () => void;
   }
 
   let {
@@ -33,11 +37,13 @@
     showCheckbox = false,
     isMatch = false,
     isCurrent = false,
+    isSelected = false,
     itemHeight = 32,
     indentSize = 20,
     class: className = '',
     onToggleExpand,
-    onToggleCheck
+    onToggleCheck,
+    onNodeClick
   }: Props = $props();
 
   // 计算缩进
@@ -48,6 +54,7 @@
   class="treekit-node {className}"
   class:treekit-node--match={isMatch}
   class:treekit-node--current={isCurrent}
+  class:treekit-node--selected={isSelected}
   class:treekit-node--has-children={node.hasChildren}
   style:height="{itemHeight}px"
   style:padding-left="{indent}px"
@@ -55,6 +62,7 @@
   data-checkstate={checkState}
   data-match={isMatch}
   data-current={isCurrent}
+  data-selected={isSelected}
   data-id={node.id}
 >
   <!-- 展开/收起按钮 -->
@@ -62,7 +70,7 @@
     class="treekit-expand"
     class:treekit-expand--expanded={expanded}
     class:treekit-expand--has-children={node.hasChildren}
-    onclick={onToggleExpand}
+    onclick={(e) => { e.stopPropagation(); onToggleExpand?.(); }}
     disabled={!node.hasChildren}
     aria-label={expanded ? 'Collapse' : 'Expand'}
     type="button"
@@ -78,7 +86,10 @@
 
   {#if showCheckbox}
     <!-- 复选框 -->
-    <label class="treekit-checkbox-wrapper" onclick={(e) => { e.preventDefault(); onToggleCheck?.(); }}>
+    <label
+      class="treekit-checkbox-wrapper"
+      onclick={(e) => { e.stopPropagation(); onToggleCheck?.(); }}
+    >
       <input
         class="treekit-checkbox-input"
         type="checkbox"
@@ -94,7 +105,11 @@
   {/if}
 
   <!-- 节点名称 -->
-  <span class="treekit-label" title={node.name}>
+  <span
+    class="treekit-label"
+    title={node.name}
+    onclick={(e) => { e.stopPropagation(); onNodeClick?.(); }}
+  >
     {node.name}
   </span>
 </div>

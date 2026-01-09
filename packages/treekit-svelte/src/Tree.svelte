@@ -135,24 +135,52 @@
     });
   }
 
+  let clickTimer: ReturnType<typeof setTimeout> | null = null;
+
   function handleNodeClick(nodeId: string) {
     if (!selectable) return;
 
     const node = tree.index.nodeMap.get(nodeId);
     if (!node) return;
 
-    const wasSelected = tree.selectedId === nodeId;
-    if (wasSelected) {
-      tree.clearSelection();
-    } else {
-      tree.select(nodeId);
-    }
+    if (clickTimer) {
+      // 300ms 内再次点击 → 双击
+      clearTimeout(clickTimer);
+      clickTimer = null;
 
-    // 触发回调
-    onSelect?.(tree.selectedId ? [tree.selectedId] : [], {
-      node,
-      selected: !wasSelected
-    });
+      // 双击展开（不影响选中状态）
+      if (node.hasChildren) {
+        const visibleIndex = tree.getVisibleIndex(nodeId);
+        if (visibleIndex >= 0) {
+          const wasExpanded = tree.expandedSet.has(nodeId);
+          tree.toggle(visibleIndex);
+
+          // 触发回调
+          onExpand?.(Array.from(tree.expandedSet), {
+            node,
+            expanded: !wasExpanded
+          });
+        }
+      }
+    } else {
+      // 首次点击 → 延迟后选中
+      clickTimer = setTimeout(() => {
+        clickTimer = null;
+
+        const wasSelected = tree.selectedId === nodeId;
+        if (wasSelected) {
+          tree.clearSelection();
+        } else {
+          tree.select(nodeId);
+        }
+
+        // 触发回调
+        onSelect?.(tree.selectedId ? [tree.selectedId] : [], {
+          node,
+          selected: !wasSelected
+        });
+      }, 300);
+    }
   }
 
   // ============ 公开方法 ============
@@ -285,10 +313,12 @@
     showCheckbox={checkable}
     {checkStrictly}
     currentMatchId={searchNavigator.currentId}
+    selectedId={tree.selectedId}
     index={tree.index}
     {itemHeight}
     onToggleExpand={handleToggleExpand}
     onToggleCheck={handleToggleCheck}
+    onNodeClick={handleNodeClick}
   />
 </div>
 
