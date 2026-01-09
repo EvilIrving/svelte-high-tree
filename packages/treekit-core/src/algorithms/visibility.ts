@@ -1,5 +1,5 @@
 import type { FlatNode, TreeIndex } from '../types';
-import { getAncestorIds } from './flatten';
+import { getAncestorIDs } from './flatten';
 
 /**
  * 计算可见节点列表
@@ -94,7 +94,7 @@ export function expandToNode(
   if (!nodeMap.has(nodeId)) return newSet;
 
   // 展开所有祖先
-  const ancestors = getAncestorIds(nodeId, { nodeMap } as TreeIndex);
+  const ancestors = getAncestorIDs(nodeId, { nodeMap } as TreeIndex);
   for (const id of ancestors) {
     newSet.add(id);
   }

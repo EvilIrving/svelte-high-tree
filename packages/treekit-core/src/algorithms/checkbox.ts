@@ -211,6 +211,6 @@ export function uncheckAll(): Set<string> {
 /**
  * 获取所有已选中的叶子节点 ID
  */
-export function getCheckedLeafIds(flatNodes: FlatNode[], checkedSet: Set<string>): string[] {
+export function getCheckedLeafIDs(flatNodes: FlatNode[], checkedSet: Set<string>): string[] {
   return flatNodes.filter((n) => !n.hasChildren && checkedSet.has(n.id)).map((n) => n.id);
 }

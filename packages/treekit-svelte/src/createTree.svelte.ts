@@ -1,4 +1,5 @@
 import { TreeEngine, type RawNode, type TreeOptions, type FlatNode, type NodeStatus, type TreeIndex, type CheckState } from '@light-cat/treekit-core';
+import { SvelteSet } from 'svelte/reactivity';
 
 /**
  * createTree - Svelte 状态适配器
@@ -22,10 +23,10 @@ export function createTree(nodes?: RawNode[], options?: TreeOptions) {
   let checkedCount = $state.raw(0);
   let matchCount = $state.raw(0);
   let selectedId: string | null = $state.raw(null);
-  // 响应式的状态集 - 必须同步引擎的变化
-  let checkedSet: ReadonlySet<string> = $state.raw(new Set());
-  let expandedSet: ReadonlySet<string> = $state.raw(new Set());
-  let matchSet: ReadonlySet<string> = $state.raw(new Set());
+  // 响应式的状态集 - 使用 SvelteSet 以支持响应式追踪
+  const checkedSet = new SvelteSet<string>();
+  const expandedSet = new SvelteSet<string>();
+  const matchSet = new SvelteSet<string>();
 
   // 内部状态同步
   const syncState = () => {
@@ -36,11 +37,19 @@ export function createTree(nodes?: RawNode[], options?: TreeOptions) {
     checkedCount = engine.checkedCount;
     matchCount = engine.matchCount;
     selectedId = engine.selectedId;
-    // 同步状态集（关键：确保引用变化时触发响应式更新）
-    checkedSet = engine.checkedSet;
-    expandedSet = engine.expandedSet;
-    matchSet = engine.matchSet;
+    // 同步状态集到 SvelteSet
+    syncSet(checkedSet, engine.checkedSet);
+    syncSet(expandedSet, engine.expandedSet);
+    syncSet(matchSet, engine.matchSet);
   };
+
+  // 辅助函数：同步 SvelteSet
+  function syncSet<T>(svelteSet: SvelteSet<T>, sourceSet: ReadonlySet<T>): void {
+    if (svelteSet.size !== sourceSet.size || [...svelteSet].some((v) => !sourceSet.has(v))) {
+      svelteSet.clear();
+      sourceSet.forEach((v) => svelteSet.add(v));
+    }
+  }
 
   // 订阅引擎变化
   const unsubscribe = engine.subscribe(() => {
@@ -185,8 +194,8 @@ export function createTree(nodes?: RawNode[], options?: TreeOptions) {
       return engine.getCheckStateByNodeId(nodeId);
     },
 
-    getCheckedLeafIds() {
-      return engine.getCheckedLeafIds();
+    getCheckedLeafIDs() {
+      return engine.getCheckedLeafIDs();
     },
 
     getVisibleIndex(nodeId: string): number {

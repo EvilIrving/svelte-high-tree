@@ -63,36 +63,36 @@ export interface TreeOptions {
   filterable?: boolean;
   /** 启用搜索功能（Web Worker 异步搜索） */
   searchable?: boolean;
-  /** 默认展开的节点 ID 列表 */
-  defaultExpandedIds?: string[];
-  /** 默认勾选的节点 ID 列表（checkbox） */
-  defaultCheckedIds?: string[];
+  /** 默认展开的节点 key 列表 */
+  defaultExpandedKeys?: string[];
+  /** 默认勾选的节点 key 列表（checkbox） */
+  defaultCheckedKeys?: string[];
   /** checkStrictly 模式：父子勾选不再联动，无半选状态 */
   checkStrictly?: boolean;
-  /** 默认选中的节点 ID（单选，只取第一个） */
-  defaultSelectedIds?: string[];
+  /** 默认选中的节点 key（单选，只取第一个） */
+  defaultSelectedKeys?: string[];
   /** 字段映射配置 */
   fieldMapper?: FieldMapper;
 }
 
 // 默认配置常量
-export const defaultFieldMapper: Required<FieldMapper> = {
+export const DEFAULT_FIELD_MAPPER: Required<FieldMapper> = {
   id: 'id',
   parentId: 'parentId',
   name: 'name',
   children: 'children'
 };
 
-export const defaultTreeOptions: Required<TreeOptions> = {
+export const DEFAULT_TREE_OPTIONS: Required<TreeOptions> = {
   checkable: false,
   accordion: false,
   filterable: false,
   searchable: false,
-  defaultExpandedIds: [],
-  defaultCheckedIds: [],
+  defaultExpandedKeys: [],
+  defaultCheckedKeys: [],
   checkStrictly: false,
-  defaultSelectedIds: [],
-  fieldMapper: { ...defaultFieldMapper }
+  defaultSelectedKeys: [],
+  fieldMapper: { ...DEFAULT_FIELD_MAPPER }
 };
 
 // ============ 导出节点状态（供 UI 使用） ============

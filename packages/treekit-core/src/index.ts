@@ -8,7 +8,7 @@ export type {
   FieldMapper,
   CheckState
 } from './types';
-export { defaultTreeOptions } from './types';
+export { DEFAULT_TREE_OPTIONS, DEFAULT_FIELD_MAPPER } from './types';
 
 // Core
 export { TreeEngine } from './TreeEngine';
@@ -16,9 +16,9 @@ export { TreeEngine } from './TreeEngine';
 // Algorithms
 export {
   buildFlatTree,
-  getAncestorIds,
+  getAncestorIDs,
   getAncestorSet,
-  getSubtreeIds
+  getSubtreeIDs
 } from './algorithms/flatten';
 
 export {
@@ -35,7 +35,7 @@ export {
   getCheckState,
   checkAll,
   uncheckAll,
-  getCheckedLeafIds
+  getCheckedLeafIDs
 } from './algorithms/checkbox';
 
 // Virtual List
@@ -48,4 +48,4 @@ export {
 
 // Search
 export { SearchController, searchSync, type SearchResult } from './search';
-export { defaultSearchConfig, createSearchConfig, type SearchConfig } from './search-config';
+export { DEFAULT_SEARCH_CONFIG, createSearchConfig, type SearchConfig } from './search-config';

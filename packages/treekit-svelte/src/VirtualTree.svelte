@@ -7,9 +7,9 @@
   interface Props {
     visibleList: FlatNode[];
     flatNodes: FlatNode[];
-    expandedSet: Set<string>;
-    checkedSet: Set<string>;
-    matchSet?: Set<string>;
+    expandedSet: ReadonlySet<string>;
+    checkedSet: ReadonlySet<string>;
+    matchSet?: ReadonlySet<string>;
     showCheckbox?: boolean;
     checkStrictly?: boolean;
     currentMatchId?: string | null;

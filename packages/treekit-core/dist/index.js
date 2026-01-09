@@ -1,25 +1,34 @@
+var __typeError = (msg) => {
+  throw TypeError(msg);
+};
+var __accessCheck = (obj, member, msg) => member.has(obj) || __typeError("Cannot " + msg);
+var __privateGet = (obj, member, getter) => (__accessCheck(obj, member, "read from private field"), getter ? getter.call(obj) : member.get(obj));
+var __privateAdd = (obj, member, value) => member.has(obj) ? __typeError("Cannot add the same private member more than once") : member instanceof WeakSet ? member.add(obj) : member.set(obj, value);
+var __privateSet = (obj, member, value, setter) => (__accessCheck(obj, member, "write to private field"), setter ? setter.call(obj, value) : member.set(obj, value), value);
+var __privateMethod = (obj, member, method) => (__accessCheck(obj, member, "access private method"), method);
+
 // src/types.ts
-var defaultFieldMapper = {
+var DEFAULT_FIELD_MAPPER = {
   id: "id",
   parentId: "parentId",
   name: "name",
   children: "children"
 };
-var defaultTreeOptions = {
+var DEFAULT_TREE_OPTIONS = {
   checkable: false,
   accordion: false,
   filterable: false,
   searchable: false,
-  defaultExpandedIds: [],
-  defaultCheckedIds: [],
+  defaultExpandedKeys: [],
+  defaultCheckedKeys: [],
   checkStrictly: false,
-  defaultSelectedIds: [],
-  fieldMapper: { ...defaultFieldMapper }
+  defaultSelectedKeys: [],
+  fieldMapper: { ...DEFAULT_FIELD_MAPPER }
 };
 
 // src/algorithms/flatten.ts
 function buildFlatTree(rawNodes, fieldMapper) {
-  const mapper = { ...defaultFieldMapper, ...fieldMapper };
+  const mapper = { ...DEFAULT_FIELD_MAPPER, ...fieldMapper };
   const idKey = mapper.id;
   const parentIdKey = mapper.parentId;
   const nameKey = mapper.name;
@@ -80,7 +89,7 @@ function buildFlatTree(rawNodes, fieldMapper) {
     }
   };
 }
-function getAncestorIds(nodeId, index) {
+function getAncestorIDs(nodeId, index) {
   const ancestors = [];
   let currentId = index.nodeMap.get(nodeId)?.parentId ?? null;
   while (currentId !== null) {
@@ -90,9 +99,9 @@ function getAncestorIds(nodeId, index) {
   return ancestors;
 }
 function getAncestorSet(nodeId, index) {
-  return new Set(getAncestorIds(nodeId, index));
+  return new Set(getAncestorIDs(nodeId, index));
 }
-function getSubtreeIds(nodeId, flatNodes, index) {
+function getSubtreeIDs(nodeId, flatNodes, index) {
   const node = index.nodeMap.get(nodeId);
   if (!node) return [];
   const ids = [];
@@ -150,7 +159,7 @@ function toggleExpand(nodeId, expandedSet) {
 function expandToNode(nodeId, expandedSet, nodeMap) {
   const newSet = new Set(expandedSet);
   if (!nodeMap.has(nodeId)) return newSet;
-  const ancestors = getAncestorIds(nodeId, { nodeMap });
+  const ancestors = getAncestorIDs(nodeId, { nodeMap });
   for (const id of ancestors) {
     newSet.add(id);
   }
@@ -241,97 +250,102 @@ function checkAll(flatNodes) {
 function uncheckAll() {
   return /* @__PURE__ */ new Set();
 }
-function getCheckedLeafIds(flatNodes, checkedSet) {
+function getCheckedLeafIDs(flatNodes, checkedSet) {
   return flatNodes.filter((n) => !n.hasChildren && checkedSet.has(n.id)).map((n) => n.id);
 }
 
 // src/TreeEngine.ts
+var _flatNodes, _index, _expandedSet, _checkedSet, _selectedId, _filterSet, _matchSet, _options, _fieldMapper, _subscribers, _batchMode, _pendingNotify, _visibleList, _visibleIndexMap, _TreeEngine_instances, notify_fn, notifySubscribers_fn, recomputeVisibility_fn, updateAncestorsCheckState_fn;
 var TreeEngine = class {
   // id → visibleIndex
   constructor(options) {
+    __privateAdd(this, _TreeEngine_instances);
     // ========== 大数据：普通变量 ==========
-    this._flatNodes = [];
-    this._index = {
+    __privateAdd(this, _flatNodes, []);
+    __privateAdd(this, _index, {
       nodeMap: /* @__PURE__ */ new Map(),
       indexMap: /* @__PURE__ */ new Map(),
       childrenMap: /* @__PURE__ */ new Map(),
       rootIds: []
-    };
+    });
     // ========== 状态管理 ==========
-    this._expandedSet = /* @__PURE__ */ new Set();
-    this._checkedSet = /* @__PURE__ */ new Set();
-    this._selectedId = null;
+    __privateAdd(this, _expandedSet, /* @__PURE__ */ new Set());
+    __privateAdd(this, _checkedSet, /* @__PURE__ */ new Set());
+    __privateAdd(this, _selectedId, null);
     // 当前选中的节点（单选）
-    this._filterSet = /* @__PURE__ */ new Set();
+    __privateAdd(this, _filterSet, /* @__PURE__ */ new Set());
     // 过滤显示集合（匹配节点 + 祖先）
-    this._matchSet = /* @__PURE__ */ new Set();
+    __privateAdd(this, _matchSet, /* @__PURE__ */ new Set());
+    // 精确匹配的节点
+    __privateAdd(this, _options);
+    __privateAdd(this, _fieldMapper);
     // ========== 订阅系统 ==========
-    this._subscribers = /* @__PURE__ */ new Set();
+    __privateAdd(this, _subscribers, /* @__PURE__ */ new Set());
     // ========== 事务模式 ==========
-    this._batchMode = false;
-    this._pendingNotify = false;
+    __privateAdd(this, _batchMode, false);
+    __privateAdd(this, _pendingNotify, false);
     // ========== 可见性缓存 ==========
-    this._visibleList = [];
-    this._visibleIndexMap = /* @__PURE__ */ new Map();
-    this._options = {
-      checkable: options?.checkable ?? defaultTreeOptions.checkable,
-      accordion: options?.accordion ?? defaultTreeOptions.accordion,
-      filterable: options?.filterable ?? defaultTreeOptions.filterable,
-      searchable: options?.searchable ?? defaultTreeOptions.searchable,
-      defaultExpandedIds: options?.defaultExpandedIds ?? defaultTreeOptions.defaultExpandedIds,
-      defaultCheckedIds: options?.defaultCheckedIds ?? defaultTreeOptions.defaultCheckedIds,
-      checkStrictly: options?.checkStrictly ?? defaultTreeOptions.checkStrictly,
-      defaultSelectedIds: options?.defaultSelectedIds ?? defaultTreeOptions.defaultSelectedIds,
-      fieldMapper: options?.fieldMapper ?? defaultTreeOptions.fieldMapper
-    };
+    __privateAdd(this, _visibleList, []);
+    __privateAdd(this, _visibleIndexMap, /* @__PURE__ */ new Map());
+    __privateSet(this, _options, {
+      checkable: options?.checkable ?? DEFAULT_TREE_OPTIONS.checkable,
+      accordion: options?.accordion ?? DEFAULT_TREE_OPTIONS.accordion,
+      filterable: options?.filterable ?? DEFAULT_TREE_OPTIONS.filterable,
+      searchable: options?.searchable ?? DEFAULT_TREE_OPTIONS.searchable,
+      defaultExpandedKeys: options?.defaultExpandedKeys ?? DEFAULT_TREE_OPTIONS.defaultExpandedKeys,
+      defaultCheckedKeys: options?.defaultCheckedKeys ?? DEFAULT_TREE_OPTIONS.defaultCheckedKeys,
+      checkStrictly: options?.checkStrictly ?? DEFAULT_TREE_OPTIONS.checkStrictly,
+      defaultSelectedKeys: options?.defaultSelectedKeys ?? DEFAULT_TREE_OPTIONS.defaultSelectedKeys,
+      fieldMapper: options?.fieldMapper ?? DEFAULT_TREE_OPTIONS.fieldMapper
+    });
     const mapper = options?.fieldMapper ?? {};
-    this._fieldMapper = {
-      id: mapper.id ?? defaultFieldMapper.id,
-      parentId: mapper.parentId ?? defaultFieldMapper.parentId,
-      name: mapper.name ?? defaultFieldMapper.name,
-      children: mapper.children ?? defaultFieldMapper.children
-    };
+    __privateSet(this, _fieldMapper, {
+      id: mapper.id ?? DEFAULT_FIELD_MAPPER.id,
+      parentId: mapper.parentId ?? DEFAULT_FIELD_MAPPER.parentId,
+      name: mapper.name ?? DEFAULT_FIELD_MAPPER.name,
+      children: mapper.children ?? DEFAULT_FIELD_MAPPER.children
+    });
   }
   // ========== 公共只读属性 ==========
   get flatNodes() {
-    return this._flatNodes;
+    return __privateGet(this, _flatNodes);
   }
   get index() {
-    return this._index;
+    return __privateGet(this, _index);
   }
   get visibleList() {
-    return this._visibleList;
+    return __privateGet(this, _visibleList);
   }
   get totalCount() {
-    return this._flatNodes.length;
+    return __privateGet(this, _flatNodes).length;
   }
   get visibleCount() {
-    return this._visibleList.length;
+    return __privateGet(this, _visibleList).length;
   }
   get checkedCount() {
-    return this._checkedSet.size;
+    return __privateGet(this, _checkedSet).size;
   }
   get expandedSet() {
-    return this._expandedSet;
+    return __privateGet(this, _expandedSet);
   }
   get checkedSet() {
-    return this._checkedSet;
+    return __privateGet(this, _checkedSet);
   }
   get matchSet() {
-    return this._matchSet;
+    return __privateGet(this, _matchSet);
   }
   get filterSet() {
-    return this._filterSet;
+    return __privateGet(this, _filterSet);
   }
   get isAccordionMode() {
-    return this._options.accordion;
+    return __privateGet(this, _options).accordion;
   }
   get isCheckStrictly() {
-    return this._options.checkStrictly;
+    return __privateGet(this, _options).checkStrictly;
   }
   /** 当前选中的节点 ID（单选） */
   get selectedId() {
-    return this._selectedId;
+    return __privateGet(this, _selectedId);
   }
   // ========== 初始化 ==========
   /**
@@ -340,24 +354,24 @@ var TreeEngine = class {
    * @param fieldMapper 字段映射配置（可选，使用构造函数中的配置）
    */
   init(rawNodes, fieldMapper) {
-    const mapper = fieldMapper ?? this._fieldMapper;
+    const mapper = fieldMapper ?? __privateGet(this, _fieldMapper);
     const result = buildFlatTree(rawNodes, mapper);
-    this._flatNodes = result.flatNodes;
-    this._index = result.index;
-    this._expandedSet = new Set(this._options.defaultExpandedIds);
-    this._checkedSet = new Set(this._options.defaultCheckedIds);
-    this._selectedId = this._options.defaultSelectedIds[0] ?? null;
-    this._filterSet = /* @__PURE__ */ new Set();
-    this._matchSet = /* @__PURE__ */ new Set();
-    this._recomputeVisibility();
-    this._notify();
+    __privateSet(this, _flatNodes, result.flatNodes);
+    __privateSet(this, _index, result.index);
+    __privateSet(this, _expandedSet, new Set(__privateGet(this, _options).defaultExpandedKeys));
+    __privateSet(this, _checkedSet, new Set(__privateGet(this, _options).defaultCheckedKeys));
+    __privateSet(this, _selectedId, __privateGet(this, _options).defaultSelectedKeys[0] ?? null);
+    __privateSet(this, _filterSet, /* @__PURE__ */ new Set());
+    __privateSet(this, _matchSet, /* @__PURE__ */ new Set());
+    __privateMethod(this, _TreeEngine_instances, recomputeVisibility_fn).call(this);
+    __privateMethod(this, _TreeEngine_instances, notify_fn).call(this);
   }
   /**
    * 更新配置
    */
   setOptions(options) {
-    this._options = { ...this._options, ...options };
-    this._notify();
+    __privateSet(this, _options, { ...__privateGet(this, _options), ...options });
+    __privateMethod(this, _TreeEngine_instances, notify_fn).call(this);
   }
   // ========== 订阅机制 ==========
   /**
@@ -365,27 +379,27 @@ var TreeEngine = class {
    * @returns 取消订阅函数
    */
   subscribe(fn) {
-    this._subscribers.add(fn);
-    return () => this._subscribers.delete(fn);
+    __privateGet(this, _subscribers).add(fn);
+    return () => __privateGet(this, _subscribers).delete(fn);
   }
   /**
    * 开启事务模式
    * 在事务模式下，多次状态变更会合并为一次通知
    */
   startBatch() {
-    this._batchMode = true;
+    __privateSet(this, _batchMode, true);
   }
   /**
    * 提交事务
    * 合并所有pending的状态变更并通知订阅者
    */
   commit() {
-    if (!this._batchMode) return;
-    this._batchMode = false;
-    if (this._pendingNotify) {
-      this._pendingNotify = false;
-      this._recomputeVisibility();
-      this._notifySubscribers();
+    if (!__privateGet(this, _batchMode)) return;
+    __privateSet(this, _batchMode, false);
+    if (__privateGet(this, _pendingNotify)) {
+      __privateSet(this, _pendingNotify, false);
+      __privateMethod(this, _TreeEngine_instances, recomputeVisibility_fn).call(this);
+      __privateMethod(this, _TreeEngine_instances, notifySubscribers_fn).call(this);
     }
   }
   /**
@@ -404,77 +418,48 @@ var TreeEngine = class {
       this.commit();
     }
   }
-  _notify() {
-    if (this._batchMode) {
-      this._pendingNotify = true;
-    } else {
-      this._recomputeVisibility();
-      this._notifySubscribers();
-    }
-  }
-  _notifySubscribers() {
-    for (const fn of this._subscribers) {
-      fn();
-    }
-  }
-  // ========== 可见性计算 ==========
-  _recomputeVisibility() {
-    if (this._filterSet.size > 0) {
-      this._visibleList = computeFilteredVisibleNodes(
-        this._flatNodes,
-        this._expandedSet,
-        this._filterSet
-      );
-    } else {
-      this._visibleList = computeVisibleNodes(this._flatNodes, this._expandedSet);
-    }
-    this._visibleIndexMap.clear();
-    for (let i = 0; i < this._visibleList.length; i++) {
-      this._visibleIndexMap.set(this._visibleList[i].id, i);
-    }
-  }
   // ========== 节点查询 ==========
   /**
    * 根据 id 获取节点
    */
   getNode(nodeId) {
-    return this._index.nodeMap.get(nodeId);
+    return __privateGet(this, _index).nodeMap.get(nodeId);
   }
   /**
    * 根据 visibleIndex 获取节点
    */
   getNodeByVisibleIndex(visibleIndex) {
-    return this._visibleList[visibleIndex];
+    return __privateGet(this, _visibleList)[visibleIndex];
   }
   /**
    * 根据 visibleIndex 获取对应的 flatIndex（用于引擎操作）
    * @returns flatIndex，如果找不到返回 -1
    */
   getFlatIndexByVisibleIndex(visibleIndex) {
-    const node = this._visibleList[visibleIndex];
+    const node = __privateGet(this, _visibleList)[visibleIndex];
     if (!node) return -1;
-    return this._index.indexMap.get(node.id) ?? -1;
+    return __privateGet(this, _index).indexMap.get(node.id) ?? -1;
   }
   /**
    * 获取节点在可见列表中的索引
    */
   getVisibleIndex(nodeId) {
-    return this._visibleIndexMap.get(nodeId) ?? -1;
+    return __privateGet(this, _visibleIndexMap).get(nodeId) ?? -1;
   }
   /**
    * 获取节点状态（供 UI 渲染使用）
    */
   getNodeStatus(nodeId) {
-    const node = this._index.nodeMap.get(nodeId);
+    const node = __privateGet(this, _index).nodeMap.get(nodeId);
     if (!node) return null;
-    const visibleIndex = this._visibleIndexMap.get(nodeId) ?? -1;
+    const visibleIndex = __privateGet(this, _visibleIndexMap).get(nodeId) ?? -1;
     let isIndeterminate = false;
-    if (this._options.checkable && !this._options.checkStrictly) {
-      isIndeterminate = getCheckState(node, this._flatNodes, this._checkedSet) === "indeterminate";
+    if (__privateGet(this, _options).checkable && !__privateGet(this, _options).checkStrictly) {
+      isIndeterminate = getCheckState(node, __privateGet(this, _flatNodes), __privateGet(this, _checkedSet)) === "indeterminate";
     }
     return {
-      isExpanded: this._expandedSet.has(nodeId),
-      isChecked: this._checkedSet.has(nodeId),
+      isExpanded: __privateGet(this, _expandedSet).has(nodeId),
+      isChecked: __privateGet(this, _checkedSet).has(nodeId),
       isIndeterminate,
       isVisible: visibleIndex >= 0,
       visibleIndex
@@ -485,163 +470,163 @@ var TreeEngine = class {
    * 切换节点展开状态
    */
   toggle(index) {
-    const node = this._flatNodes[index];
+    const node = __privateGet(this, _flatNodes)[index];
     if (!node || !node.hasChildren) return;
-    if (this._options.accordion && !this._expandedSet.has(node.id)) {
-      this._expandedSet = collapseSiblings(node.id, this._flatNodes, this._expandedSet, this._index.nodeMap);
+    if (__privateGet(this, _options).accordion && !__privateGet(this, _expandedSet).has(node.id)) {
+      __privateSet(this, _expandedSet, collapseSiblings(node.id, __privateGet(this, _flatNodes), __privateGet(this, _expandedSet), __privateGet(this, _index).nodeMap));
     }
-    this._expandedSet = toggleExpand(node.id, this._expandedSet);
-    this._recomputeVisibility();
-    this._notify();
+    __privateSet(this, _expandedSet, toggleExpand(node.id, __privateGet(this, _expandedSet)));
+    __privateMethod(this, _TreeEngine_instances, recomputeVisibility_fn).call(this);
+    __privateMethod(this, _TreeEngine_instances, notify_fn).call(this);
   }
   /**
    * 设置节点展开状态
    */
   setExpanded(index, value) {
-    const node = this._flatNodes[index];
+    const node = __privateGet(this, _flatNodes)[index];
     if (!node || !node.hasChildren) return;
-    if (value && this._options.accordion) {
-      this._expandedSet = collapseSiblings(node.id, this._flatNodes, this._expandedSet, this._index.nodeMap);
+    if (value && __privateGet(this, _options).accordion) {
+      __privateSet(this, _expandedSet, collapseSiblings(node.id, __privateGet(this, _flatNodes), __privateGet(this, _expandedSet), __privateGet(this, _index).nodeMap));
     }
     if (value) {
-      this._expandedSet.add(node.id);
+      __privateGet(this, _expandedSet).add(node.id);
     } else {
-      this._expandedSet.delete(node.id);
+      __privateGet(this, _expandedSet).delete(node.id);
     }
-    this._recomputeVisibility();
-    this._notify();
+    __privateMethod(this, _TreeEngine_instances, recomputeVisibility_fn).call(this);
+    __privateMethod(this, _TreeEngine_instances, notify_fn).call(this);
   }
   /**
    * 展开到指定节点（展开所有祖先）
    */
   expandToNode(nodeId) {
-    this._expandedSet = expandToNode(nodeId, this._expandedSet, this._index.nodeMap);
-    this._recomputeVisibility();
-    this._notify();
+    __privateSet(this, _expandedSet, expandToNode(nodeId, __privateGet(this, _expandedSet), __privateGet(this, _index).nodeMap));
+    __privateMethod(this, _TreeEngine_instances, recomputeVisibility_fn).call(this);
+    __privateMethod(this, _TreeEngine_instances, notify_fn).call(this);
   }
   /**
    * 展开所有节点
    */
   expandAll() {
     const newSet = /* @__PURE__ */ new Set();
-    for (const node of this._flatNodes) {
+    for (const node of __privateGet(this, _flatNodes)) {
       if (node.hasChildren) {
         newSet.add(node.id);
       }
     }
-    this._expandedSet = newSet;
-    this._recomputeVisibility();
-    this._notify();
+    __privateSet(this, _expandedSet, newSet);
+    __privateMethod(this, _TreeEngine_instances, recomputeVisibility_fn).call(this);
+    __privateMethod(this, _TreeEngine_instances, notify_fn).call(this);
   }
   /**
    * 折叠所有节点
    */
   collapseAll() {
-    this._expandedSet = /* @__PURE__ */ new Set();
-    this._recomputeVisibility();
-    this._notify();
+    __privateSet(this, _expandedSet, /* @__PURE__ */ new Set());
+    __privateMethod(this, _TreeEngine_instances, recomputeVisibility_fn).call(this);
+    __privateMethod(this, _TreeEngine_instances, notify_fn).call(this);
   }
   /**
    * 展开到指定深度
    */
   expandToDepth(depth) {
     const newSet = /* @__PURE__ */ new Set();
-    for (const node of this._flatNodes) {
+    for (const node of __privateGet(this, _flatNodes)) {
       if (node.hasChildren && node.depth < depth) {
         newSet.add(node.id);
       }
     }
-    this._expandedSet = newSet;
-    this._recomputeVisibility();
-    this._notify();
+    __privateSet(this, _expandedSet, newSet);
+    __privateMethod(this, _TreeEngine_instances, recomputeVisibility_fn).call(this);
+    __privateMethod(this, _TreeEngine_instances, notify_fn).call(this);
   }
   /**
    * 直接设置展开集合（用于搜索结果定位等场景）
    */
   setExpandedSet(newSet) {
-    this._expandedSet = newSet;
-    this._recomputeVisibility();
-    this._notify();
+    __privateSet(this, _expandedSet, newSet);
+    __privateMethod(this, _TreeEngine_instances, recomputeVisibility_fn).call(this);
+    __privateMethod(this, _TreeEngine_instances, notify_fn).call(this);
   }
   // ========== Checkbox 操作 ==========
   /**
    * 设置节点勾选状态
    */
   setChecked(index, value) {
-    const node = this._flatNodes[index];
+    const node = __privateGet(this, _flatNodes)[index];
     if (!node) return;
-    if (this._options.checkStrictly) {
+    if (__privateGet(this, _options).checkStrictly) {
       if (value) {
-        this._checkedSet.add(node.id);
+        __privateGet(this, _checkedSet).add(node.id);
       } else {
-        this._checkedSet.delete(node.id);
+        __privateGet(this, _checkedSet).delete(node.id);
       }
     } else {
       if (value) {
         const start = node.index;
         const end = node.subtreeEnd;
         for (let i = start; i <= end; i++) {
-          this._checkedSet.add(this._flatNodes[i].id);
+          __privateGet(this, _checkedSet).add(__privateGet(this, _flatNodes)[i].id);
         }
-        this._updateAncestorsCheckState(node.parentId);
+        __privateMethod(this, _TreeEngine_instances, updateAncestorsCheckState_fn).call(this, node.parentId);
       } else {
         const start = node.index;
         const end = node.subtreeEnd;
         for (let i = start; i <= end; i++) {
-          this._checkedSet.delete(this._flatNodes[i].id);
+          __privateGet(this, _checkedSet).delete(__privateGet(this, _flatNodes)[i].id);
         }
-        this._updateAncestorsCheckState(node.parentId);
+        __privateMethod(this, _TreeEngine_instances, updateAncestorsCheckState_fn).call(this, node.parentId);
       }
     }
-    this._notify();
+    __privateMethod(this, _TreeEngine_instances, notify_fn).call(this);
   }
   /**
    * 切换节点勾选状态
    */
   toggleCheck(index) {
-    const node = this._flatNodes[index];
+    const node = __privateGet(this, _flatNodes)[index];
     if (!node) return;
-    if (this._options.checkStrictly) {
-      if (this._checkedSet.has(node.id)) {
-        this._checkedSet.delete(node.id);
+    if (__privateGet(this, _options).checkStrictly) {
+      if (__privateGet(this, _checkedSet).has(node.id)) {
+        __privateGet(this, _checkedSet).delete(node.id);
       } else {
-        this._checkedSet.add(node.id);
+        __privateGet(this, _checkedSet).add(node.id);
       }
     } else {
-      this._checkedSet = toggleCheck(node.id, this._flatNodes, this._checkedSet, this._index);
+      __privateSet(this, _checkedSet, toggleCheck(node.id, __privateGet(this, _flatNodes), __privateGet(this, _checkedSet), __privateGet(this, _index)));
     }
-    this._notify();
+    __privateMethod(this, _TreeEngine_instances, notify_fn).call(this);
   }
   /**
    * 全选
    */
   checkAll() {
-    this._checkedSet = checkAll(this._flatNodes);
-    this._notify();
+    __privateSet(this, _checkedSet, checkAll(__privateGet(this, _flatNodes)));
+    __privateMethod(this, _TreeEngine_instances, notify_fn).call(this);
   }
   /**
    * 全不选
    */
   uncheckAll() {
-    this._checkedSet = uncheckAll();
-    this._notify();
+    __privateSet(this, _checkedSet, uncheckAll());
+    __privateMethod(this, _TreeEngine_instances, notify_fn).call(this);
   }
   /**
    * 获取所有已选中的叶子节点 ID
    */
-  getCheckedLeafIds() {
-    return getCheckedLeafIds(this._flatNodes, this._checkedSet);
+  getCheckedLeafIDs() {
+    return getCheckedLeafIDs(__privateGet(this, _flatNodes), __privateGet(this, _checkedSet));
   }
   /**
    * 获取节点的勾选状态
    */
   getCheckState(index) {
-    const node = this._flatNodes[index];
+    const node = __privateGet(this, _flatNodes)[index];
     if (!node) return "unchecked";
-    if (this._options.checkStrictly) {
-      return this._checkedSet.has(node.id) ? "checked" : "unchecked";
+    if (__privateGet(this, _options).checkStrictly) {
+      return __privateGet(this, _checkedSet).has(node.id) ? "checked" : "unchecked";
     }
-    return getCheckState(node, this._flatNodes, this._checkedSet);
+    return getCheckState(node, __privateGet(this, _flatNodes), __privateGet(this, _checkedSet));
   }
   /**
    * 根据节点 ID 获取勾选状态（供 UI 层使用）
@@ -651,38 +636,35 @@ var TreeEngine = class {
     if (!node) return "unchecked";
     return this.getCheckState(node.index);
   }
-  _updateAncestorsCheckState(parentId) {
-    updateAncestorsCheckState(parentId, this._flatNodes, this._checkedSet, this._index);
-  }
   // ========== 过滤/搜索操作 ==========
   /**
    * 设置过滤函数
    * @param predicate 返回 true 表示节点应显示
    */
   setFilter(predicate) {
-    if (!this._options.filterable || !predicate) {
-      this._filterSet = /* @__PURE__ */ new Set();
-      this._matchSet = /* @__PURE__ */ new Set();
-      this._recomputeVisibility();
-      this._notify();
+    if (!__privateGet(this, _options).filterable || !predicate) {
+      __privateSet(this, _filterSet, /* @__PURE__ */ new Set());
+      __privateSet(this, _matchSet, /* @__PURE__ */ new Set());
+      __privateMethod(this, _TreeEngine_instances, recomputeVisibility_fn).call(this);
+      __privateMethod(this, _TreeEngine_instances, notify_fn).call(this);
       return;
     }
     const matchIds = /* @__PURE__ */ new Set();
     const filterIds = /* @__PURE__ */ new Set();
-    for (const node of this._flatNodes) {
+    for (const node of __privateGet(this, _flatNodes)) {
       if (predicate(node)) {
         matchIds.add(node.id);
-        const ancestors = getAncestorIds(node.id, this._index);
+        const ancestors = getAncestorIDs(node.id, __privateGet(this, _index));
         for (const ancestorId of ancestors) {
           filterIds.add(ancestorId);
         }
       }
     }
-    this._filterSet = /* @__PURE__ */ new Set([...filterIds, ...matchIds]);
-    this._matchSet = matchIds;
-    this._expandedSet = expandMultiple(filterIds, this._expandedSet);
-    this._recomputeVisibility();
-    this._notify();
+    __privateSet(this, _filterSet, /* @__PURE__ */ new Set([...filterIds, ...matchIds]));
+    __privateSet(this, _matchSet, matchIds);
+    __privateSet(this, _expandedSet, expandMultiple(filterIds, __privateGet(this, _expandedSet)));
+    __privateMethod(this, _TreeEngine_instances, recomputeVisibility_fn).call(this);
+    __privateMethod(this, _TreeEngine_instances, notify_fn).call(this);
   }
   /**
    * 设置搜索关键词（使用内置过滤）
@@ -699,7 +681,7 @@ var TreeEngine = class {
    * 检查节点是否匹配搜索/过滤
    */
   isMatch(nodeId) {
-    return this._matchSet.has(nodeId);
+    return __privateGet(this, _matchSet).has(nodeId);
   }
   /**
    * 清除过滤/搜索
@@ -714,27 +696,27 @@ var TreeEngine = class {
    */
   setMatchResult(matchIds, expandIds) {
     if (matchIds.size === 0) {
-      this._filterSet = /* @__PURE__ */ new Set();
-      this._matchSet = /* @__PURE__ */ new Set();
-      this._recomputeVisibility();
-      this._notify();
+      __privateSet(this, _filterSet, /* @__PURE__ */ new Set());
+      __privateSet(this, _matchSet, /* @__PURE__ */ new Set());
+      __privateMethod(this, _TreeEngine_instances, recomputeVisibility_fn).call(this);
+      __privateMethod(this, _TreeEngine_instances, notify_fn).call(this);
       return;
     }
-    this._filterSet = /* @__PURE__ */ new Set([...matchIds, ...expandIds]);
-    this._matchSet = matchIds;
-    this._expandedSet = expandMultiple(expandIds, this._expandedSet);
-    this._recomputeVisibility();
-    this._notify();
+    __privateSet(this, _filterSet, /* @__PURE__ */ new Set([...matchIds, ...expandIds]));
+    __privateSet(this, _matchSet, matchIds);
+    __privateSet(this, _expandedSet, expandMultiple(expandIds, __privateGet(this, _expandedSet)));
+    __privateMethod(this, _TreeEngine_instances, recomputeVisibility_fn).call(this);
+    __privateMethod(this, _TreeEngine_instances, notify_fn).call(this);
   }
   // ========== 导航操作 ==========
   /**
    * 获取下一个匹配节点的位置
    */
   navigateNext(fromVisibleIndex) {
-    if (this._matchSet.size === 0) return null;
+    if (__privateGet(this, _matchSet).size === 0) return null;
     const start = fromVisibleIndex ?? -1;
-    for (let i = start + 1; i < this._visibleList.length; i++) {
-      if (this._matchSet.has(this._visibleList[i].id)) {
+    for (let i = start + 1; i < __privateGet(this, _visibleList).length; i++) {
+      if (__privateGet(this, _matchSet).has(__privateGet(this, _visibleList)[i].id)) {
         return i;
       }
     }
@@ -744,10 +726,10 @@ var TreeEngine = class {
    * 获取上一个匹配节点的位置
    */
   navigatePrev(fromVisibleIndex) {
-    if (this._matchSet.size === 0) return null;
-    const start = fromVisibleIndex ?? this._visibleList.length;
+    if (__privateGet(this, _matchSet).size === 0) return null;
+    const start = fromVisibleIndex ?? __privateGet(this, _visibleList).length;
     for (let i = start - 1; i >= 0; i--) {
-      if (this._matchSet.has(this._visibleList[i].id)) {
+      if (__privateGet(this, _matchSet).has(__privateGet(this, _visibleList)[i].id)) {
         return i;
       }
     }
@@ -757,28 +739,75 @@ var TreeEngine = class {
    * 获取匹配节点的总数
    */
   get matchCount() {
-    return this._matchSet.size;
+    return __privateGet(this, _matchSet).size;
   }
   // ========== 选中操作（单选） ==========
   /**
    * 选中指定节点（单选）
    */
   select(nodeId) {
-    if (nodeId !== null && !this._index.nodeMap.has(nodeId)) {
+    if (nodeId !== null && !__privateGet(this, _index).nodeMap.has(nodeId)) {
       return;
     }
-    this._selectedId = nodeId;
-    this._notify();
+    __privateSet(this, _selectedId, nodeId);
+    __privateMethod(this, _TreeEngine_instances, notify_fn).call(this);
   }
   /**
    * 清除选中
    */
   clearSelection() {
-    if (this._selectedId !== null) {
-      this._selectedId = null;
-      this._notify();
+    if (__privateGet(this, _selectedId) !== null) {
+      __privateSet(this, _selectedId, null);
+      __privateMethod(this, _TreeEngine_instances, notify_fn).call(this);
     }
   }
+};
+_flatNodes = new WeakMap();
+_index = new WeakMap();
+_expandedSet = new WeakMap();
+_checkedSet = new WeakMap();
+_selectedId = new WeakMap();
+_filterSet = new WeakMap();
+_matchSet = new WeakMap();
+_options = new WeakMap();
+_fieldMapper = new WeakMap();
+_subscribers = new WeakMap();
+_batchMode = new WeakMap();
+_pendingNotify = new WeakMap();
+_visibleList = new WeakMap();
+_visibleIndexMap = new WeakMap();
+_TreeEngine_instances = new WeakSet();
+notify_fn = function() {
+  if (__privateGet(this, _batchMode)) {
+    __privateSet(this, _pendingNotify, true);
+  } else {
+    __privateMethod(this, _TreeEngine_instances, recomputeVisibility_fn).call(this);
+    __privateMethod(this, _TreeEngine_instances, notifySubscribers_fn).call(this);
+  }
+};
+notifySubscribers_fn = function() {
+  for (const fn of __privateGet(this, _subscribers)) {
+    fn();
+  }
+};
+// ========== 可见性计算 ==========
+recomputeVisibility_fn = function() {
+  if (__privateGet(this, _filterSet).size > 0) {
+    __privateSet(this, _visibleList, computeFilteredVisibleNodes(
+      __privateGet(this, _flatNodes),
+      __privateGet(this, _expandedSet),
+      __privateGet(this, _filterSet)
+    ));
+  } else {
+    __privateSet(this, _visibleList, computeVisibleNodes(__privateGet(this, _flatNodes), __privateGet(this, _expandedSet)));
+  }
+  __privateGet(this, _visibleIndexMap).clear();
+  for (let i = 0; i < __privateGet(this, _visibleList).length; i++) {
+    __privateGet(this, _visibleIndexMap).set(__privateGet(this, _visibleList)[i].id, i);
+  }
+};
+updateAncestorsCheckState_fn = function(parentId) {
+  updateAncestorsCheckState(parentId, __privateGet(this, _flatNodes), __privateGet(this, _checkedSet), __privateGet(this, _index));
 };
 
 // src/virtual-list.ts
@@ -955,14 +984,17 @@ function calculateVisibleRange(scrollTop, viewportHeight, itemHeight, totalCount
 }
 
 // src/search.ts
+var _worker, _debounceTimer, _debounceMs, _onResult, _isReady, _pendingSearch;
 var SearchController = class {
   constructor(options) {
-    this.worker = null;
-    this.debounceTimer = null;
-    this.isReady = false;
-    this.pendingSearch = null;
-    this.debounceMs = options.debounceMs ?? 200;
-    this.onResult = options.onResult;
+    __privateAdd(this, _worker, null);
+    __privateAdd(this, _debounceTimer, null);
+    __privateAdd(this, _debounceMs);
+    __privateAdd(this, _onResult);
+    __privateAdd(this, _isReady, false);
+    __privateAdd(this, _pendingSearch, null);
+    __privateSet(this, _debounceMs, options.debounceMs ?? 200);
+    __privateSet(this, _onResult, options.onResult);
   }
   /**
    * 初始化 Worker
@@ -972,30 +1004,30 @@ var SearchController = class {
     const url = workerUrl ?? new URL("./search.worker.ts", import.meta.url);
     const urlObj = typeof url === "string" ? new URL(url) : url;
     if (urlObj.protocol === "data:") {
-      this.worker = new Worker(urlObj, { type: "module" });
+      __privateSet(this, _worker, new Worker(urlObj, { type: "module" }));
     } else {
-      this.worker = new Worker(urlObj, { type: "module" });
+      __privateSet(this, _worker, new Worker(urlObj, { type: "module" }));
     }
-    this.worker.onmessage = (e) => {
+    __privateGet(this, _worker).onmessage = (e) => {
       const { type, payload } = e.data;
       if (type === "init-done") {
-        this.isReady = true;
-        if (this.pendingSearch !== null) {
-          this.searchImmediate(this.pendingSearch);
-          this.pendingSearch = null;
+        __privateSet(this, _isReady, true);
+        if (__privateGet(this, _pendingSearch) !== null) {
+          this.searchImmediate(__privateGet(this, _pendingSearch));
+          __privateSet(this, _pendingSearch, null);
         }
       }
       if (type === "search-result" && payload) {
-        this.onResult({
+        __privateGet(this, _onResult).call(this, {
           matchIds: new Set(payload.matchIds),
           expandIds: new Set(payload.expandIds)
         });
       }
     };
-    this.worker.onerror = (e) => {
+    __privateGet(this, _worker).onerror = (e) => {
       console.error("Search worker error:", e);
     };
-    this.worker.postMessage({
+    __privateGet(this, _worker).postMessage({
       type: "init",
       payload: {
         data: searchData.map((n) => ({
@@ -1010,34 +1042,34 @@ var SearchController = class {
    * 执行搜索（带防抖）
    */
   search(keyword) {
-    if (this.debounceTimer) {
-      clearTimeout(this.debounceTimer);
+    if (__privateGet(this, _debounceTimer)) {
+      clearTimeout(__privateGet(this, _debounceTimer));
     }
     if (keyword.trim() === "") {
       this.clear();
       return;
     }
-    this.debounceTimer = setTimeout(() => {
+    __privateSet(this, _debounceTimer, setTimeout(() => {
       this.searchImmediate(keyword);
-    }, this.debounceMs);
+    }, __privateGet(this, _debounceMs)));
   }
   /**
    * 立即搜索（不防抖）
    */
   searchImmediate(keyword) {
-    if (this.debounceTimer) {
-      clearTimeout(this.debounceTimer);
-      this.debounceTimer = null;
+    if (__privateGet(this, _debounceTimer)) {
+      clearTimeout(__privateGet(this, _debounceTimer));
+      __privateSet(this, _debounceTimer, null);
     }
     if (keyword.trim() === "") {
       this.clear();
       return;
     }
-    if (!this.isReady) {
-      this.pendingSearch = keyword;
+    if (!__privateGet(this, _isReady)) {
+      __privateSet(this, _pendingSearch, keyword);
       return;
     }
-    this.worker?.postMessage({
+    __privateGet(this, _worker)?.postMessage({
       type: "search",
       payload: { keyword }
     });
@@ -1046,11 +1078,11 @@ var SearchController = class {
    * 清除搜索
    */
   clear() {
-    if (this.debounceTimer) {
-      clearTimeout(this.debounceTimer);
-      this.debounceTimer = null;
+    if (__privateGet(this, _debounceTimer)) {
+      clearTimeout(__privateGet(this, _debounceTimer));
+      __privateSet(this, _debounceTimer, null);
     }
-    this.onResult({
+    __privateGet(this, _onResult).call(this, {
       matchIds: /* @__PURE__ */ new Set(),
       expandIds: /* @__PURE__ */ new Set()
     });
@@ -1059,21 +1091,27 @@ var SearchController = class {
    * 检查是否就绪
    */
   get ready() {
-    return this.isReady;
+    return __privateGet(this, _isReady);
   }
   /**
    * 销毁
    */
   destroy() {
-    if (this.debounceTimer) {
-      clearTimeout(this.debounceTimer);
-      this.debounceTimer = null;
+    if (__privateGet(this, _debounceTimer)) {
+      clearTimeout(__privateGet(this, _debounceTimer));
+      __privateSet(this, _debounceTimer, null);
     }
-    this.worker?.terminate();
-    this.worker = null;
-    this.isReady = false;
+    __privateGet(this, _worker)?.terminate();
+    __privateSet(this, _worker, null);
+    __privateSet(this, _isReady, false);
   }
 };
+_worker = new WeakMap();
+_debounceTimer = new WeakMap();
+_debounceMs = new WeakMap();
+_onResult = new WeakMap();
+_isReady = new WeakMap();
+_pendingSearch = new WeakMap();
 function searchSync(keyword, nodes) {
   if (!keyword || keyword.trim() === "") {
     return { matchIds: /* @__PURE__ */ new Set(), expandIds: /* @__PURE__ */ new Set() };
@@ -1096,16 +1134,19 @@ function searchSync(keyword, nodes) {
 }
 
 // src/search-config.ts
-var defaultSearchConfig = {
+var DEFAULT_SEARCH_CONFIG = {
   enableNavigation: true,
   enableLoop: true,
   showCount: true,
   debounceMs: 200
 };
 function createSearchConfig(overrides) {
-  return { ...defaultSearchConfig, ...overrides };
+  return { ...DEFAULT_SEARCH_CONFIG, ...overrides };
 }
 export {
+  DEFAULT_FIELD_MAPPER,
+  DEFAULT_SEARCH_CONFIG,
+  DEFAULT_TREE_OPTIONS,
   SearchController,
   TreeEngine,
   VirtualListController,
@@ -1116,16 +1157,14 @@ export {
   computeFilteredVisibleNodes,
   computeVisibleNodes,
   createSearchConfig,
-  defaultSearchConfig,
-  defaultTreeOptions,
   expandMultiple,
   expandToNode,
-  getAncestorIds,
+  getAncestorIDs,
   getAncestorSet,
   getCheckState,
-  getCheckedLeafIds,
+  getCheckedLeafIDs,
   getCheckState as getNodeCheckState,
-  getSubtreeIds,
+  getSubtreeIDs,
   searchSync,
   toggleCheck,
   toggleExpand,

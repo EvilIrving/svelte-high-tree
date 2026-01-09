@@ -1,5 +1,5 @@
 import type { RawNode, FlatNode, TreeIndex, FieldMapper } from '../types';
-import { defaultFieldMapper } from '../types';
+import { DEFAULT_FIELD_MAPPER } from '../types';
 
 /**
  * 将邻接表转换为扁平化数组 + 索引结构
@@ -15,7 +15,7 @@ export function buildFlatTree(
   flatNodes: FlatNode[];
   index: TreeIndex;
 } {
-  const mapper = { ...defaultFieldMapper, ...fieldMapper };
+  const mapper = { ...DEFAULT_FIELD_MAPPER, ...fieldMapper };
   const idKey = mapper.id;
   const parentIdKey = mapper.parentId;
   const nameKey = mapper.name;
@@ -107,7 +107,7 @@ export function buildFlatTree(
 /**
  * 获取节点的所有祖先 ID（从父节点到根节点）
  */
-export function getAncestorIds(nodeId: string, index: TreeIndex): string[] {
+export function getAncestorIDs(nodeId: string, index: TreeIndex): string[] {
   const ancestors: string[] = [];
   let currentId = index.nodeMap.get(nodeId)?.parentId ?? null;
 
@@ -123,13 +123,13 @@ export function getAncestorIds(nodeId: string, index: TreeIndex): string[] {
  * 获取节点的所有祖先 ID 集合
  */
 export function getAncestorSet(nodeId: string, index: TreeIndex): Set<string> {
-  return new Set(getAncestorIds(nodeId, index));
+  return new Set(getAncestorIDs(nodeId, index));
 }
 
 /**
  * 获取子树中所有节点 ID（利用 subtreeEnd）
  */
-export function getSubtreeIds(nodeId: string, flatNodes: FlatNode[], index: TreeIndex): string[] {
+export function getSubtreeIDs(nodeId: string, flatNodes: FlatNode[], index: TreeIndex): string[] {
   const node = index.nodeMap.get(nodeId);
   if (!node) return [];
 

@@ -15,7 +15,7 @@ export interface SearchConfig {
 /**
  * 默认配置
  */
-export const defaultSearchConfig: SearchConfig = {
+export const DEFAULT_SEARCH_CONFIG: SearchConfig = {
   enableNavigation: true,
   enableLoop: true,
   showCount: true,
@@ -26,5 +26,5 @@ export const defaultSearchConfig: SearchConfig = {
  * 创建搜索配置（合并默认值）
  */
 export function createSearchConfig(overrides?: Partial<SearchConfig>): SearchConfig {
-  return { ...defaultSearchConfig, ...overrides };
+  return { ...DEFAULT_SEARCH_CONFIG, ...overrides };
 }

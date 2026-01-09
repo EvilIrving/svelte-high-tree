@@ -39,18 +39,19 @@ interface TreeOptions {
     filterable?: boolean;
     /** 启用搜索功能（Web Worker 异步搜索） */
     searchable?: boolean;
-    /** 默认展开的节点 ID 列表 */
-    defaultExpandedIds?: string[];
-    /** 默认勾选的节点 ID 列表（checkbox） */
-    defaultCheckedIds?: string[];
+    /** 默认展开的节点 key 列表 */
+    defaultExpandedKeys?: string[];
+    /** 默认勾选的节点 key 列表（checkbox） */
+    defaultCheckedKeys?: string[];
     /** checkStrictly 模式：父子勾选不再联动，无半选状态 */
     checkStrictly?: boolean;
-    /** 默认选中的节点 ID（单选，只取第一个） */
-    defaultSelectedIds?: string[];
+    /** 默认选中的节点 key（单选，只取第一个） */
+    defaultSelectedKeys?: string[];
     /** 字段映射配置 */
     fieldMapper?: FieldMapper;
 }
-declare const defaultTreeOptions: Required<TreeOptions>;
+declare const DEFAULT_FIELD_MAPPER: Required<FieldMapper>;
+declare const DEFAULT_TREE_OPTIONS: Required<TreeOptions>;
 interface NodeStatus {
     isExpanded: boolean;
     isChecked: boolean;
@@ -73,20 +74,7 @@ interface NodeStatus {
  * - 所有重算允许 O(n)
  */
 declare class TreeEngine {
-    private _flatNodes;
-    private _index;
-    private _expandedSet;
-    private _checkedSet;
-    private _selectedId;
-    private _filterSet;
-    private _matchSet;
-    private _options;
-    private _fieldMapper;
-    private _subscribers;
-    private _batchMode;
-    private _pendingNotify;
-    private _visibleList;
-    private _visibleIndexMap;
+    #private;
     constructor(options?: TreeOptions);
     get flatNodes(): readonly FlatNode[];
     get index(): TreeIndex;
@@ -136,9 +124,6 @@ declare class TreeEngine {
      * });
      */
     batch(fn: () => void): void;
-    private _notify;
-    private _notifySubscribers;
-    private _recomputeVisibility;
     /**
      * 根据 id 获取节点
      */
@@ -207,7 +192,7 @@ declare class TreeEngine {
     /**
      * 获取所有已选中的叶子节点 ID
      */
-    getCheckedLeafIds(): string[];
+    getCheckedLeafIDs(): string[];
     /**
      * 获取节点的勾选状态
      */
@@ -216,7 +201,6 @@ declare class TreeEngine {
      * 根据节点 ID 获取勾选状态（供 UI 层使用）
      */
     getCheckStateByNodeId(nodeId: string): CheckState;
-    private _updateAncestorsCheckState;
     /**
      * 设置过滤函数
      * @param predicate 返回 true 表示节点应显示
@@ -276,7 +260,7 @@ declare function buildFlatTree(rawNodes: RawNode[], fieldMapper?: FieldMapper): 
 /**
  * 获取节点的所有祖先 ID（从父节点到根节点）
  */
-declare function getAncestorIds(nodeId: string, index: TreeIndex): string[];
+declare function getAncestorIDs(nodeId: string, index: TreeIndex): string[];
 /**
  * 获取节点的所有祖先 ID 集合
  */
@@ -284,7 +268,7 @@ declare function getAncestorSet(nodeId: string, index: TreeIndex): Set<string>;
 /**
  * 获取子树中所有节点 ID（利用 subtreeEnd）
  */
-declare function getSubtreeIds(nodeId: string, flatNodes: FlatNode[], index: TreeIndex): string[];
+declare function getSubtreeIDs(nodeId: string, flatNodes: FlatNode[], index: TreeIndex): string[];
 
 /**
  * 计算可见节点列表
@@ -333,7 +317,7 @@ declare function uncheckAll(): Set<string>;
 /**
  * 获取所有已选中的叶子节点 ID
  */
-declare function getCheckedLeafIds(flatNodes: FlatNode[], checkedSet: Set<string>): string[];
+declare function getCheckedLeafIDs(flatNodes: FlatNode[], checkedSet: Set<string>): string[];
 
 /**
  * 虚拟列表状态
@@ -432,12 +416,7 @@ type SearchCallback = (result: SearchResult) => void;
  * 管理 Web Worker 通信和防抖
  */
 declare class SearchController {
-    private worker;
-    private debounceTimer;
-    private debounceMs;
-    private onResult;
-    private isReady;
-    private pendingSearch;
+    #private;
     constructor(options: {
         debounceMs?: number;
         onResult: SearchCallback;
@@ -498,10 +477,10 @@ interface SearchConfig {
 /**
  * 默认配置
  */
-declare const defaultSearchConfig: SearchConfig;
+declare const DEFAULT_SEARCH_CONFIG: SearchConfig;
 /**
  * 创建搜索配置（合并默认值）
  */
 declare function createSearchConfig(overrides?: Partial<SearchConfig>): SearchConfig;
 
-export { type CheckState, type FieldMapper, type FlatNode, type NodeStatus, type RawNode, type SearchConfig, SearchController, type SearchResult, TreeEngine, type TreeIndex, type TreeOptions, VirtualListController, type VirtualListState, buildFlatTree, calculateVisibleRange, checkAll, collapseSiblings, computeFilteredVisibleNodes, computeVisibleNodes, createSearchConfig, defaultSearchConfig, defaultTreeOptions, expandMultiple, expandToNode, getAncestorIds, getAncestorSet, getCheckState, getCheckedLeafIds, getCheckState as getNodeCheckState, getSubtreeIds, searchSync, toggleCheck, toggleExpand, uncheckAll };
+export { type CheckState, DEFAULT_FIELD_MAPPER, DEFAULT_SEARCH_CONFIG, DEFAULT_TREE_OPTIONS, type FieldMapper, type FlatNode, type NodeStatus, type RawNode, type SearchConfig, SearchController, type SearchResult, TreeEngine, type TreeIndex, type TreeOptions, VirtualListController, type VirtualListState, buildFlatTree, calculateVisibleRange, checkAll, collapseSiblings, computeFilteredVisibleNodes, computeVisibleNodes, createSearchConfig, expandMultiple, expandToNode, getAncestorIDs, getAncestorSet, getCheckState, getCheckedLeafIDs, getCheckState as getNodeCheckState, getSubtreeIDs, searchSync, toggleCheck, toggleExpand, uncheckAll };

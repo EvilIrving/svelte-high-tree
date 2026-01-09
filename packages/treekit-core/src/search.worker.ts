@@ -29,7 +29,7 @@ let searchData: SearchData[] = [];
 let parentMap: Map<string, string | null> = new Map();
 
 // 可选：倒排索引加速搜索
-let invertedIndex: Map<string, Set<string>> = new Map();
+const invertedIndex: Map<string, Set<string>> = new Map();
 
 /**
  * 构建倒排索引
