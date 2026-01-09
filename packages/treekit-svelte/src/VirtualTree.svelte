@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
-  import type { FlatNode, TreeIndex } from '@light-cat/treekit-core';
+  import type { FlatNode, TreeIndex, CheckState } from '@light-cat/treekit-core';
   import TreeNode from './TreeNode.svelte';
   import { VirtualListController, getNodeCheckState, type VirtualListState } from './virtual-list';
 
@@ -11,6 +11,7 @@
     checkedSet: Set<string>;
     matchSet?: Set<string>;
     showCheckbox?: boolean;
+    checkStrictly?: boolean;
     currentMatchId?: string | null;
     index: TreeIndex;
     itemHeight?: number;
@@ -25,12 +26,31 @@
     checkedSet,
     matchSet,
     showCheckbox = false,
+    checkStrictly = false,
     currentMatchId = null,
     index,
     itemHeight = 32,
     onToggleExpand,
     onToggleCheck
   }: Props = $props();
+
+  /**
+   * 获取节点勾选状态（支持 checkStrictly 模式）
+   */
+  function getCheckStateForNode(node: FlatNode): CheckState {
+    if (checkStrictly) {
+      // 严格模式：只看自身是否在 checkedSet 中，无半选
+      return checkedSet.has(node.id) ? 'checked' : 'unchecked';
+    }
+    return getNodeCheckState(node, flatNodes, checkedSet);
+  }
+
+  /**
+   * 检查节点是否展开
+   */
+  function isNodeExpanded(nodeId: string): boolean {
+    return expandedSet.has(nodeId);
+  }
 
   // 虚拟列表状态
   let startIndex = $state(0);
@@ -111,8 +131,8 @@
       {#each renderList as node (node.id)}
         <TreeNode
           {node}
-          expanded={expandedSet.has(node.id)}
-          checkState={getNodeCheckState(node, flatNodes, checkedSet)}
+          expanded={isNodeExpanded(node.id)}
+          checkState={getCheckStateForNode(node)}
           {showCheckbox}
           isMatch={matchSet?.has(node.id)}
           isCurrent={currentMatchId === node.id}

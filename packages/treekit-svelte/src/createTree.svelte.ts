@@ -1,4 +1,4 @@
-import { TreeEngine, type RawNode, type TreeOptions, type FlatNode, type NodeStatus, type TreeIndex } from '@light-cat/treekit-core';
+import { TreeEngine, type RawNode, type TreeOptions, type FlatNode, type NodeStatus, type TreeIndex, type CheckState } from '@light-cat/treekit-core';
 
 /**
  * createTree - Svelte 状态适配器
@@ -21,6 +21,11 @@ export function createTree(nodes?: RawNode[], options?: TreeOptions) {
   let visibleCount = $state.raw(0);
   let checkedCount = $state.raw(0);
   let matchCount = $state.raw(0);
+  let selectedId: string | null = $state.raw(null);
+  // 响应式的状态集 - 必须同步引擎的变化
+  let checkedSet: ReadonlySet<string> = $state.raw(new Set());
+  let expandedSet: ReadonlySet<string> = $state.raw(new Set());
+  let matchSet: ReadonlySet<string> = $state.raw(new Set());
 
   // 内部状态同步
   const syncState = () => {
@@ -30,6 +35,11 @@ export function createTree(nodes?: RawNode[], options?: TreeOptions) {
     visibleCount = engine.visibleCount;
     checkedCount = engine.checkedCount;
     matchCount = engine.matchCount;
+    selectedId = engine.selectedId;
+    // 同步状态集（关键：确保引用变化时触发响应式更新）
+    checkedSet = engine.checkedSet;
+    expandedSet = engine.expandedSet;
+    matchSet = engine.matchSet;
   };
 
   // 订阅引擎变化
@@ -52,15 +62,15 @@ export function createTree(nodes?: RawNode[], options?: TreeOptions) {
     get visibleCount() { return visibleCount; },
     get checkedCount() { return checkedCount; },
     get matchCount() { return matchCount; },
+    get selectedId() { return selectedId; },
 
     // 索引
     get index(): TreeIndex { return engine.index; },
 
-    // 状态集
-    get expandedSet() { return engine.expandedSet; },
-    get checkedSet() { return engine.checkedSet; },
-    get matchSet() { return engine.matchSet; },
-    get filterSet() { return engine.filterSet; },
+    // 状态集（使用同步后的响应式状态）
+    get expandedSet() { return expandedSet; },
+    get checkedSet() { return checkedSet; },
+    get matchSet() { return matchSet; },
 
     // 初始化
     init(rawNodes: RawNode[]) {
@@ -75,32 +85,40 @@ export function createTree(nodes?: RawNode[], options?: TreeOptions) {
     toggle(visibleIndex: number) {
       const node = engine.getNodeByVisibleIndex(visibleIndex);
       if (node) {
-        const idx = engine.flatNodes.findIndex((n: FlatNode) => n.id === node.id);
-        if (idx >= 0) engine.toggle(idx);
+        const flatIndex = engine.index.indexMap.get(node.id);
+        if (flatIndex != null) engine.toggle(flatIndex);
       }
     },
 
     setExpanded(visibleIndex: number, value: boolean) {
       const node = engine.getNodeByVisibleIndex(visibleIndex);
       if (node) {
-        const idx = engine.flatNodes.findIndex((n: FlatNode) => n.id === node.id);
-        if (idx >= 0) engine.setExpanded(idx, value);
+        const flatIndex = engine.index.indexMap.get(node.id);
+        if (flatIndex != null) engine.setExpanded(flatIndex, value);
       }
     },
 
     setChecked(visibleIndex: number, value: boolean) {
       const node = engine.getNodeByVisibleIndex(visibleIndex);
       if (node) {
-        const idx = engine.flatNodes.findIndex((n: FlatNode) => n.id === node.id);
-        if (idx >= 0) engine.setChecked(idx, value);
+        const flatIndex = engine.index.indexMap.get(node.id);
+        if (flatIndex != null) engine.setChecked(flatIndex, value);
       }
     },
 
     toggleCheck(visibleIndex: number) {
       const node = engine.getNodeByVisibleIndex(visibleIndex);
       if (node) {
-        const idx = engine.flatNodes.findIndex((n: FlatNode) => n.id === node.id);
-        if (idx >= 0) engine.toggleCheck(idx);
+        const flatIndex = engine.index.indexMap.get(node.id);
+        if (flatIndex != null) engine.toggleCheck(flatIndex);
+      }
+    },
+
+    /** 直接通过 nodeId 切换勾选状态 */
+    toggleCheckById(nodeId: string) {
+      const flatIndex = engine.index.indexMap.get(nodeId);
+      if (flatIndex != null) {
+        engine.toggleCheck(flatIndex);
       }
     },
 
@@ -142,6 +160,11 @@ export function createTree(nodes?: RawNode[], options?: TreeOptions) {
       engine.clearFilter();
     },
 
+    /** 直接设置搜索匹配结果（用于异步搜索，如 Web Worker） */
+    setMatchResult(matchIds: Set<string>, expandIds: Set<string>) {
+      engine.setMatchResult(matchIds, expandIds);
+    },
+
     isMatch(nodeId: string) {
       return engine.isMatch(nodeId);
     },
@@ -164,11 +187,12 @@ export function createTree(nodes?: RawNode[], options?: TreeOptions) {
       return engine.getNodeStatus(nodeId);
     },
 
-    getCheckState(visibleIndex: number): 'checked' | 'unchecked' | 'indeterminate' {
+    getCheckState(visibleIndex: number): CheckState {
       const node = engine.getNodeByVisibleIndex(visibleIndex);
       if (!node) return 'unchecked';
-      const idx = engine.flatNodes.findIndex((n: FlatNode) => n.id === node.id);
-      return engine.getCheckState(idx);
+      const flatIndex = engine.index.indexMap.get(node.id);
+      if (flatIndex == null) return 'unchecked';
+      return engine.getCheckState(flatIndex);
     },
 
     getCheckedLeafIds() {
@@ -177,6 +201,20 @@ export function createTree(nodes?: RawNode[], options?: TreeOptions) {
 
     getVisibleIndex(nodeId: string): number {
       return engine.getVisibleIndex(nodeId);
+    },
+
+    // 选中操作（单选）
+    select(nodeId: string | null) {
+      engine.select(nodeId);
+    },
+
+    clearSelection() {
+      engine.clearSelection();
+    },
+
+    // 展开到指定节点
+    expandToNode(nodeId: string) {
+      engine.expandToNode(nodeId);
     },
 
     // 销毁

@@ -63,12 +63,14 @@ export interface TreeOptions {
   filterable?: boolean;
   /** 启用搜索功能（Web Worker 异步搜索） */
   searchable?: boolean;
-  /** 启用虚拟滚动（大数据量优化） */
-  virtual?: boolean;
   /** 默认展开的节点 ID 列表 */
   defaultExpandedIds?: string[];
-  /** 默认选中的节点 ID 列表 */
+  /** 默认勾选的节点 ID 列表（checkbox） */
   defaultCheckedIds?: string[];
+  /** checkStrictly 模式：父子勾选不再联动，无半选状态 */
+  checkStrictly?: boolean;
+  /** 默认选中的节点 ID（单选，只取第一个） */
+  defaultSelectedIds?: string[];
   /** 字段映射配置 */
   fieldMapper?: FieldMapper;
 }
@@ -86,9 +88,10 @@ export const defaultTreeOptions: Required<TreeOptions> = {
   accordion: false,
   filterable: false,
   searchable: false,
-  virtual: false,
   defaultExpandedIds: [],
   defaultCheckedIds: [],
+  checkStrictly: false,
+  defaultSelectedIds: [],
   fieldMapper: { ...defaultFieldMapper }
 };
 

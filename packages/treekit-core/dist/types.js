@@ -9,7 +9,10 @@ export const defaultTreeOptions = {
     checkable: false,
     accordion: false,
     filterable: false,
+    searchable: false,
     defaultExpandedIds: [],
     defaultCheckedIds: [],
+    checkStrictly: false,
+    defaultSelectedIds: [],
     fieldMapper: { ...defaultFieldMapper }
 };

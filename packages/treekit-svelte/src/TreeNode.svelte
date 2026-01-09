@@ -78,13 +78,12 @@
 
   {#if showCheckbox}
     <!-- 复选框 -->
-    <label class="treekit-checkbox-wrapper">
+    <label class="treekit-checkbox-wrapper" onclick={(e) => { e.preventDefault(); onToggleCheck?.(); }}>
       <input
         class="treekit-checkbox-input"
         type="checkbox"
         checked={checkState === 'checked'}
-        indeterminate={checkState === 'indeterminate'}
-        onchange={onToggleCheck}
+        tabindex="-1"
       />
       <span
         class="treekit-checkbox-visual"

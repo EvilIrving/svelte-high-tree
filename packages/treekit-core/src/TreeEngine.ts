@@ -1,4 +1,4 @@
-import type { RawNode, FlatNode, TreeIndex, TreeOptions, NodeStatus, FieldMapper } from './types';
+import type { RawNode, FlatNode, TreeIndex, TreeOptions, NodeStatus, FieldMapper, CheckState } from './types';
 import { defaultTreeOptions, defaultFieldMapper } from './types';
 import { buildFlatTree } from './algorithms/flatten';
 import {
@@ -44,6 +44,7 @@ export class TreeEngine {
   // ========== 状态管理 ==========
   private _expandedSet = new Set<string>();
   private _checkedSet = new Set<string>();
+  private _selectedId: string | null = null; // 当前选中的节点（单选）
   private _filterSet = new Set<string>(); // 过滤显示集合（匹配节点 + 祖先）
   private _matchSet = new Set<string>(); // 精确匹配的节点
   private _options: Required<TreeOptions>;
@@ -62,9 +63,10 @@ export class TreeEngine {
       accordion: options?.accordion ?? defaultTreeOptions.accordion,
       filterable: options?.filterable ?? defaultTreeOptions.filterable,
       searchable: options?.searchable ?? defaultTreeOptions.searchable,
-      virtual: options?.virtual ?? defaultTreeOptions.virtual,
       defaultExpandedIds: options?.defaultExpandedIds ?? defaultTreeOptions.defaultExpandedIds,
       defaultCheckedIds: options?.defaultCheckedIds ?? defaultTreeOptions.defaultCheckedIds,
+      checkStrictly: options?.checkStrictly ?? defaultTreeOptions.checkStrictly,
+      defaultSelectedIds: options?.defaultSelectedIds ?? defaultTreeOptions.defaultSelectedIds,
       fieldMapper: options?.fieldMapper ?? defaultTreeOptions.fieldMapper
     };
     const mapper = options?.fieldMapper ?? {};
@@ -122,6 +124,15 @@ export class TreeEngine {
     return this._options.accordion;
   }
 
+  get isCheckStrictly(): boolean {
+    return this._options.checkStrictly;
+  }
+
+  /** 当前选中的节点 ID（单选） */
+  get selectedId(): string | null {
+    return this._selectedId;
+  }
+
   // ========== 初始化 ==========
 
   /**
@@ -138,6 +149,7 @@ export class TreeEngine {
     // 重置状态
     this._expandedSet = new Set(this._options.defaultExpandedIds);
     this._checkedSet = new Set(this._options.defaultCheckedIds);
+    this._selectedId = this._options.defaultSelectedIds[0] ?? null;
     this._filterSet = new Set();
     this._matchSet = new Set();
 
@@ -223,12 +235,16 @@ export class TreeEngine {
 
     const visibleIndex = this._visibleIndexMap.get(nodeId) ?? -1;
 
+    // checkStrictly 模式下无半选状态
+    let isIndeterminate = false;
+    if (this._options.checkable && !this._options.checkStrictly) {
+      isIndeterminate = getCheckState(node, this._flatNodes, this._checkedSet) === 'indeterminate';
+    }
+
     return {
       isExpanded: this._expandedSet.has(nodeId),
       isChecked: this._checkedSet.has(nodeId),
-      isIndeterminate: this._options.checkable
-        ? getCheckState(node, this._flatNodes, this._checkedSet) === 'indeterminate'
-        : false,
+      isIndeterminate,
       isVisible: visibleIndex >= 0,
       visibleIndex
     };
@@ -341,24 +357,34 @@ export class TreeEngine {
     const node = this._flatNodes[index];
     if (!node) return;
 
-    if (value) {
-      // 批量选中子树
-      const start = node.index;
-      const end = node.subtreeEnd;
-      for (let i = start; i <= end; i++) {
-        this._checkedSet.add(this._flatNodes[i].id);
+    if (this._options.checkStrictly) {
+      // 严格模式：只影响当前节点，不联动父子
+      if (value) {
+        this._checkedSet.add(node.id);
+      } else {
+        this._checkedSet.delete(node.id);
       }
-      // 更新祖先
-      this._updateAncestorsCheckState(node.parentId);
     } else {
-      // 批量取消子树
-      const start = node.index;
-      const end = node.subtreeEnd;
-      for (let i = start; i <= end; i++) {
-        this._checkedSet.delete(this._flatNodes[i].id);
+      // 非严格模式：父子联动
+      if (value) {
+        // 批量选中子树
+        const start = node.index;
+        const end = node.subtreeEnd;
+        for (let i = start; i <= end; i++) {
+          this._checkedSet.add(this._flatNodes[i].id);
+        }
+        // 更新祖先
+        this._updateAncestorsCheckState(node.parentId);
+      } else {
+        // 批量取消子树
+        const start = node.index;
+        const end = node.subtreeEnd;
+        for (let i = start; i <= end; i++) {
+          this._checkedSet.delete(this._flatNodes[i].id);
+        }
+        // 更新祖先
+        this._updateAncestorsCheckState(node.parentId);
       }
-      // 更新祖先
-      this._updateAncestorsCheckState(node.parentId);
     }
 
     this._notify();
@@ -371,7 +397,17 @@ export class TreeEngine {
     const node = this._flatNodes[index];
     if (!node) return;
 
-    this._checkedSet = toggleCheck(node.id, this._flatNodes, this._checkedSet, this._index);
+    if (this._options.checkStrictly) {
+      // 严格模式：只切换当前节点，不联动父子
+      if (this._checkedSet.has(node.id)) {
+        this._checkedSet.delete(node.id);
+      } else {
+        this._checkedSet.add(node.id);
+      }
+    } else {
+      // 非严格模式：使用父子联动算法
+      this._checkedSet = toggleCheck(node.id, this._flatNodes, this._checkedSet, this._index);
+    }
     this._notify();
   }
 
@@ -404,6 +440,11 @@ export class TreeEngine {
   getCheckState(index: number): CheckState {
     const node = this._flatNodes[index];
     if (!node) return 'unchecked';
+
+    if (this._options.checkStrictly) {
+      // 严格模式：只看自身是否在 checkedSet 中，无半选
+      return this._checkedSet.has(node.id) ? 'checked' : 'unchecked';
+    }
     return getCheckState(node, this._flatNodes, this._checkedSet);
   }
 
@@ -480,6 +521,30 @@ export class TreeEngine {
     this.setFilter(null);
   }
 
+  /**
+   * 直接设置搜索匹配结果（用于异步搜索，如 Web Worker）
+   * @param matchIds 匹配的节点 ID 集合
+   * @param expandIds 需要展开的祖先节点 ID 集合
+   */
+  setMatchResult(matchIds: Set<string>, expandIds: Set<string>): void {
+    if (matchIds.size === 0) {
+      this._filterSet = new Set();
+      this._matchSet = new Set();
+      this._recomputeVisibility();
+      this._notify();
+      return;
+    }
+
+    // filterSet = matchIds + expandIds（祖先）
+    this._filterSet = new Set([...matchIds, ...expandIds]);
+    this._matchSet = matchIds;
+
+    // 自动展开所有匹配路径
+    this._expandedSet = expandMultiple(expandIds, this._expandedSet);
+    this._recomputeVisibility();
+    this._notify();
+  }
+
   // ========== 导航操作 ==========
 
   /**
@@ -518,8 +583,27 @@ export class TreeEngine {
   get matchCount(): number {
     return this._matchSet.size;
   }
-}
 
-// 类型重新导出
-type CheckState = 'checked' | 'unchecked' | 'indeterminate';
-export type { CheckState };
+  // ========== 选中操作（单选） ==========
+
+  /**
+   * 选中指定节点（单选）
+   */
+  select(nodeId: string | null): void {
+    if (nodeId !== null && !this._index.nodeMap.has(nodeId)) {
+      return;
+    }
+    this._selectedId = nodeId;
+    this._notify();
+  }
+
+  /**
+   * 清除选中
+   */
+  clearSelection(): void {
+    if (this._selectedId !== null) {
+      this._selectedId = null;
+      this._notify();
+    }
+  }
+}

@@ -1,6 +1,3 @@
-import type { FlatNode } from '@light-cat/treekit-core';
-import type { SearchConfig } from './search-config';
-
 export interface SearchResult {
   matchIds: Set<string>;
   expandIds: Set<string>;

@@ -1,4 +1,4 @@
-import type { RawNode, FlatNode, TreeIndex, TreeOptions, NodeStatus, FieldMapper } from './types';
+import type { RawNode, FlatNode, TreeIndex, TreeOptions, NodeStatus, FieldMapper, CheckState } from './types';
 /**
  * TreeEngine - 树形数据结构引擎
  *
@@ -17,6 +17,7 @@ export declare class TreeEngine {
     private _index;
     private _expandedSet;
     private _checkedSet;
+    private _selectedId;
     private _filterSet;
     private _matchSet;
     private _options;
@@ -36,6 +37,9 @@ export declare class TreeEngine {
     get matchSet(): ReadonlySet<string>;
     get filterSet(): ReadonlySet<string>;
     get isAccordionMode(): boolean;
+    get isCheckStrictly(): boolean;
+    /** 当前选中的节点 ID（单选） */
+    get selectedId(): string | null;
     /**
      * 初始化树数据
      * @param rawNodes 原始节点数据
@@ -94,6 +98,10 @@ export declare class TreeEngine {
      */
     expandToDepth(depth: number): void;
     /**
+     * 直接设置展开集合（用于搜索结果定位等场景）
+     */
+    setExpandedSet(newSet: Set<string>): void;
+    /**
      * 设置节点勾选状态
      */
     setChecked(index: number, value: boolean): void;
@@ -136,6 +144,12 @@ export declare class TreeEngine {
      */
     clearFilter(): void;
     /**
+     * 直接设置搜索匹配结果（用于异步搜索，如 Web Worker）
+     * @param matchIds 匹配的节点 ID 集合
+     * @param expandIds 需要展开的祖先节点 ID 集合
+     */
+    setMatchResult(matchIds: Set<string>, expandIds: Set<string>): void;
+    /**
      * 获取下一个匹配节点的位置
      */
     navigateNext(fromVisibleIndex?: number): number | null;
@@ -147,6 +161,12 @@ export declare class TreeEngine {
      * 获取匹配节点的总数
      */
     get matchCount(): number;
+    /**
+     * 选中指定节点（单选）
+     */
+    select(nodeId: string | null): void;
+    /**
+     * 清除选中
+     */
+    clearSelection(): void;
 }
-type CheckState = 'checked' | 'unchecked' | 'indeterminate';
-export type { CheckState };

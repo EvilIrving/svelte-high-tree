@@ -1,13 +1,7 @@
 <script lang="ts">
-  import { onMount, onDestroy } from 'svelte';
-  import {
-    createTree,
-    VirtualTree,
-    SearchController,
-    SearchNavigator,
-    createSearchConfig
-  } from '@light-cat/treekit-svelte';
-  import { expandMultiple, type RawNode } from '@light-cat/treekit-core';
+  import { onMount } from 'svelte';
+  import { Tree } from '@light-cat/treekit-svelte';
+  import type { RawNode, FlatNode } from '@light-cat/treekit-core';
 
   /**
    * 生成有序的测试数据
@@ -45,74 +39,35 @@
     return nodes;
   }
 
-  // 树管理器
-  const tree = createTree();
-
-  // 搜索配置
-  const searchConfig = createSearchConfig({
-    enableNavigation: true,
-    enableLoop: true,
-    showCount: true
-  });
-
-  // 搜索控制器
-  let searchController: SearchController | null = null;
-
-  // 搜索导航器
-  const searchNavigator = new SearchNavigator(searchConfig);
-
-  // 搜索关键词
-  let searchKeyword = $state('');
-
   // 节点数量选项
   const nodeCounts = [1000, 5000, 10000, 30000, 50000];
   let selectedNodeCount = $state(10000);
 
-  // 性能统计
-  let initTime = $state(0);
-  let lastActionTime = $state(0);
+  // 树数据
+  let treeData = $state<RawNode[]>([]);
+
+  // Tree 组件引用
+  let treeRef: Tree;
 
   // 搜索输入
   let searchInput = $state('');
 
-  // 虚拟树组件引用
-  let virtualTreeRef: VirtualTree;
+  // 搜索状态（响应式）
+  let searchState = $state({ hasMatches: false, current: 0, total: 0 });
+
+  // 树状态统计（响应式）
+  let stats = $state({ totalCount: 0, visibleCount: 0, checkedCount: 0, expandedCount: 0 });
+
+  // 性能统计
+  let initTime = $state(0);
+  let lastActionTime = $state(0);
 
   /**
    * 加载数据
    */
   function loadData(nodeCount: number): void {
     const startTime = performance.now();
-
-    // 生成测试数据
-    const rawNodes = generateOrderedTestData(nodeCount, 5, 15);
-
-    // 初始化树
-    tree.init(rawNodes);
-
-    // 初始化搜索
-    searchController?.destroy();
-    searchController = new SearchController({
-      debounceMs: searchConfig.debounceMs,
-      onResult: (result) => {
-        // 应用搜索结果到树
-        tree.setSearch(searchKeyword);
-        // 更新导航器并跳转到第一个匹配项
-        const navResult = searchNavigator.updateMatches(result.matchIds);
-        if (navResult.id) {
-          tree.setExpandedSet(expandMultiple(new Set(navResult.expandIds), new Set(tree.expandedSet)));
-          // 延迟滚动，等待 DOM 更新
-          requestAnimationFrame(() => {
-            virtualTreeRef?.scrollToNode(navResult.id!);
-          });
-        }
-      }
-    });
-    searchController.init(rawNodes);
-
-    // 初始化导航器
-    searchNavigator.init(tree.flatNodes, tree.index);
-
+    treeData = generateOrderedTestData(nodeCount, 5, 15);
     initTime = Math.round(performance.now() - startTime);
     searchInput = '';
   }
@@ -123,13 +78,8 @@
   function handleSearch(e: Event): void {
     const keyword = (e.target as HTMLInputElement).value;
     searchInput = keyword;
-    searchKeyword = keyword;
-
-    if (keyword.trim() === '') {
-      tree.clearFilter();
-    } else {
-      searchController?.search(keyword);
-    }
+    treeRef?.search(keyword);
+    updateSearchState();
   }
 
   /**
@@ -137,36 +87,44 @@
    */
   function clearSearch(): void {
     searchInput = '';
-    searchKeyword = '';
-    tree.clearFilter();
-    searchController?.clear();
-    searchNavigator.reset();
+    treeRef?.clearSearch();
+    updateSearchState();
+  }
+
+  /**
+   * 更新搜索状态
+   */
+  function updateSearchState(): void {
+    const state = treeRef?.getSearchState();
+    if (state) {
+      searchState = state;
+    }
+  }
+
+  /**
+   * 更新树状态统计
+   */
+  function updateStats(): void {
+    const s = treeRef?.getStats();
+    if (s) {
+      stats = s;
+    }
   }
 
   /**
    * 下一个匹配项
    */
   function handleNextMatch(): void {
-    const result = searchNavigator.next();
-    if (result.id) {
-      tree.setExpandedSet(expandMultiple(new Set(result.expandIds), new Set(tree.expandedSet)));
-      requestAnimationFrame(() => {
-        virtualTreeRef?.scrollToNode(result.id!);
-      });
-    }
+    treeRef?.nextMatch();
+    updateSearchState();
   }
 
   /**
    * 上一个匹配项
    */
   function handlePrevMatch(): void {
-    const result = searchNavigator.prev();
-    if (result.id) {
-      tree.setExpandedSet(expandMultiple(new Set(result.expandIds), new Set(tree.expandedSet)));
-      requestAnimationFrame(() => {
-        virtualTreeRef?.scrollToNode(result.id!);
-      });
-    }
+    treeRef?.prevMatch();
+    updateSearchState();
   }
 
   /**
@@ -174,8 +132,9 @@
    */
   function expandToDepth(depth: number): void {
     const startTime = performance.now();
-    tree.expandToDepth(depth);
+    treeRef?.expandToDepth(depth);
     lastActionTime = Math.round(performance.now() - startTime);
+    updateStats();
   }
 
   /**
@@ -183,8 +142,9 @@
    */
   function expandAll(): void {
     const startTime = performance.now();
-    tree.expandAll();
+    treeRef?.expandAll();
     lastActionTime = Math.round(performance.now() - startTime);
+    updateStats();
   }
 
   /**
@@ -192,8 +152,9 @@
    */
   function collapseAll(): void {
     const startTime = performance.now();
-    tree.collapseAll();
+    treeRef?.collapseAll();
     lastActionTime = Math.round(performance.now() - startTime);
+    updateStats();
   }
 
   /**
@@ -201,8 +162,9 @@
    */
   function checkAll(): void {
     const startTime = performance.now();
-    tree.checkAll();
+    treeRef?.checkAll();
     lastActionTime = Math.round(performance.now() - startTime);
+    updateStats();
   }
 
   /**
@@ -210,41 +172,31 @@
    */
   function uncheckAll(): void {
     const startTime = performance.now();
-    tree.uncheckAll();
+    treeRef?.uncheckAll();
     lastActionTime = Math.round(performance.now() - startTime);
+    updateStats();
   }
 
   /**
-   * 切换展开 (接收 nodeId)
+   * 展开回调
    */
-  function handleToggleExpand(nodeId: string): void {
-    const startTime = performance.now();
-    const visibleIndex = tree.getVisibleIndex(nodeId);
-    if (visibleIndex >= 0) {
-      tree.toggle(visibleIndex);
-    }
-    lastActionTime = Math.round(performance.now() - startTime);
+  function handleExpand(expandedKeys: string[], info: { node: FlatNode; expanded: boolean }): void {
+    updateStats();
   }
 
   /**
-   * 切换勾选 (接收 nodeId)
+   * 勾选回调
    */
-  function handleToggleCheck(nodeId: string): void {
-    const startTime = performance.now();
-    const visibleIndex = tree.getVisibleIndex(nodeId);
-    if (visibleIndex >= 0) {
-      tree.toggleCheck(visibleIndex);
-    }
-    lastActionTime = Math.round(performance.now() - startTime);
+  function handleCheck(checkedKeys: string[], info: { node: FlatNode; checked: boolean }): void {
+    updateStats();
   }
 
   onMount(() => {
     loadData(selectedNodeCount);
-  });
-
-  onDestroy(() => {
-    searchController?.destroy();
-    tree.destroy();
+    // 延迟更新统计，等待组件初始化
+    requestAnimationFrame(() => {
+      updateStats();
+    });
   });
 </script>
 
@@ -291,14 +243,14 @@
           <button class="clear-btn" onclick={clearSearch}>×</button>
         {/if}
       </div>
-      {#if searchNavigator.hasMatches}
+      {#if searchState.hasMatches}
         <div class="search-nav">
           <button class="nav-btn" onclick={handlePrevMatch} title="上一个 (Shift+Enter)">
             <svg viewBox="0 0 24 24" width="14" height="14">
               <path fill="currentColor" d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z" />
             </svg>
           </button>
-          <span class="search-count">{searchNavigator.current}/{searchNavigator.total}</span>
+          <span class="search-count">{searchState.current}/{searchState.total}</span>
           <button class="nav-btn" onclick={handleNextMatch} title="下一个 (Enter)">
             <svg viewBox="0 0 24 24" width="14" height="14">
               <path fill="currentColor" d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z" />
@@ -327,15 +279,15 @@
         <button onclick={checkAll}>全选</button>
         <button onclick={uncheckAll}>全不选</button>
       </div>
-      <span class="check-count">已选: {tree.checkedCount} 个</span>
+      <span class="check-count">已选: {stats.checkedCount} 个</span>
     </div>
   </div>
 
   <!-- 统计信息 -->
   <div class="stats-bar">
-    <span>总节点: <strong>{tree.totalCount.toLocaleString()}</strong></span>
-    <span>可见节点: <strong>{tree.visibleCount.toLocaleString()}</strong></span>
-    <span>已展开: <strong>{tree.expandedSet.size}</strong></span>
+    <span>总节点: <strong>{stats.totalCount.toLocaleString()}</strong></span>
+    <span>可见节点: <strong>{stats.visibleCount.toLocaleString()}</strong></span>
+    <span>已展开: <strong>{stats.expandedCount}</strong></span>
     <span>初始化耗时: <strong>{initTime}ms</strong></span>
     {#if lastActionTime > 0}
       <span>操作耗时: <strong>{lastActionTime}ms</strong></span>
@@ -344,20 +296,17 @@
 
   <!-- 树容器 -->
   <div class="tree-container">
-    <VirtualTree
-      bind:this={virtualTreeRef}
-      visibleList={tree.visibleList}
-      flatNodes={tree.flatNodes}
-      expandedSet={new Set(tree.expandedSet)}
-      checkedSet={new Set(tree.checkedSet)}
-      matchSet={tree.matchSet ? new Set(tree.matchSet) : undefined}
-      showCheckbox={false}
-      currentMatchId={searchNavigator.currentId}
-      index={tree.index}
-      itemHeight={32}
-      onToggleExpand={handleToggleExpand}
-      onToggleCheck={handleToggleCheck}
-    />
+    {#key treeData}
+      <Tree
+        bind:this={treeRef}
+        {treeData}
+        checkable={false}
+        searchable={false}
+        itemHeight={32}
+        onExpand={handleExpand}
+        onCheck={handleCheck}
+      />
+    {/key}
   </div>
 </div>
 

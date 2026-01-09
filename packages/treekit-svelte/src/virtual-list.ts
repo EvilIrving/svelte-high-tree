@@ -1,4 +1,8 @@
-import type { FlatNode, CheckState } from '@light-cat/treekit-core';
+import type { FlatNode } from '@light-cat/treekit-core';
+import { getCheckState } from '@light-cat/treekit-core';
+
+// 重新导出 core 的 getCheckState 作为 getNodeCheckState（兼容旧代码）
+export { getCheckState as getNodeCheckState };
 
 /**
  * 虚拟列表状态
@@ -7,48 +11,6 @@ export interface VirtualListState {
   startIndex: number;
   endIndex: number;
   offsetTop: number;
-}
-
-/**
- * 获取节点的勾选状态
- */
-export function getNodeCheckState(
-  node: FlatNode,
-  flatNodes: FlatNode[],
-  checkedSet: Set<string>
-): CheckState {
-  // 自身已勾选
-  if (checkedSet.has(node.id)) {
-    return 'checked';
-  }
-
-  // 无子节点
-  if (!node.hasChildren) {
-    return 'unchecked';
-  }
-
-  // 检查子树是否有任何勾选（半选判断）
-  if (isSubtreeHasAnyChecked(node, flatNodes, checkedSet)) {
-    return 'indeterminate';
-  }
-
-  return 'unchecked';
-}
-
-/**
- * 检查子树是否有任何节点勾选
- */
-function isSubtreeHasAnyChecked(
-  node: FlatNode,
-  flatNodes: FlatNode[],
-  checkedSet: Set<string>
-): boolean {
-  for (let i = node.index + 1; i <= node.subtreeEnd; i++) {
-    if (checkedSet.has(flatNodes[i].id)) {
-      return true;
-    }
-  }
-  return false;
 }
 
 /**
