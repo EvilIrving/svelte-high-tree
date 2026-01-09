@@ -83,35 +83,23 @@ export function createTree(nodes?: RawNode[], options?: TreeOptions) {
 
     // 节点操作（接受 visibleIndex）
     toggle(visibleIndex: number) {
-      const node = engine.getNodeByVisibleIndex(visibleIndex);
-      if (node) {
-        const flatIndex = engine.index.indexMap.get(node.id);
-        if (flatIndex != null) engine.toggle(flatIndex);
-      }
+      const flatIndex = engine.getFlatIndexByVisibleIndex(visibleIndex);
+      if (flatIndex >= 0) engine.toggle(flatIndex);
     },
 
     setExpanded(visibleIndex: number, value: boolean) {
-      const node = engine.getNodeByVisibleIndex(visibleIndex);
-      if (node) {
-        const flatIndex = engine.index.indexMap.get(node.id);
-        if (flatIndex != null) engine.setExpanded(flatIndex, value);
-      }
+      const flatIndex = engine.getFlatIndexByVisibleIndex(visibleIndex);
+      if (flatIndex >= 0) engine.setExpanded(flatIndex, value);
     },
 
     setChecked(visibleIndex: number, value: boolean) {
-      const node = engine.getNodeByVisibleIndex(visibleIndex);
-      if (node) {
-        const flatIndex = engine.index.indexMap.get(node.id);
-        if (flatIndex != null) engine.setChecked(flatIndex, value);
-      }
+      const flatIndex = engine.getFlatIndexByVisibleIndex(visibleIndex);
+      if (flatIndex >= 0) engine.setChecked(flatIndex, value);
     },
 
     toggleCheck(visibleIndex: number) {
-      const node = engine.getNodeByVisibleIndex(visibleIndex);
-      if (node) {
-        const flatIndex = engine.index.indexMap.get(node.id);
-        if (flatIndex != null) engine.toggleCheck(flatIndex);
-      }
+      const flatIndex = engine.getFlatIndexByVisibleIndex(visibleIndex);
+      if (flatIndex >= 0) engine.toggleCheck(flatIndex);
     },
 
     /** 直接通过 nodeId 切换勾选状态 */
@@ -188,11 +176,13 @@ export function createTree(nodes?: RawNode[], options?: TreeOptions) {
     },
 
     getCheckState(visibleIndex: number): CheckState {
-      const node = engine.getNodeByVisibleIndex(visibleIndex);
-      if (!node) return 'unchecked';
-      const flatIndex = engine.index.indexMap.get(node.id);
-      if (flatIndex == null) return 'unchecked';
+      const flatIndex = engine.getFlatIndexByVisibleIndex(visibleIndex);
+      if (flatIndex < 0) return 'unchecked';
       return engine.getCheckState(flatIndex);
+    },
+
+    getCheckStateByNodeId(nodeId: string): CheckState {
+      return engine.getCheckStateByNodeId(nodeId);
     },
 
     getCheckedLeafIds() {
@@ -220,6 +210,19 @@ export function createTree(nodes?: RawNode[], options?: TreeOptions) {
     // 销毁
     destroy() {
       unsubscribe();
+    },
+
+    // 事务模式
+    startBatch() {
+      engine.startBatch();
+    },
+
+    commit() {
+      engine.commit();
+    },
+
+    batch(fn: () => void) {
+      engine.batch(fn);
     }
   };
 }

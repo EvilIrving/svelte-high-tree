@@ -1,5 +1,6 @@
 import type { FlatNode, TreeIndex } from '@light-cat/treekit-core';
 import type { SearchConfig } from '@light-cat/treekit-core';
+import { getAncestorSet } from '@light-cat/treekit-core';
 
 /**
  * 导航结果
@@ -186,20 +187,8 @@ export class SearchNavigator {
    * 收集节点的所有祖先 ID
    */
   private collectAncestorIds(nodeId: string): Set<string> {
-    const ancestors = new Set<string>();
-    if (!this.index) return ancestors;
-
-    const node = this.index.nodeMap.get(nodeId);
-    if (!node) return ancestors;
-
-    let currentParentId = node.parentId;
-    while (currentParentId !== null) {
-      ancestors.add(currentParentId);
-      const parent = this.index.nodeMap.get(currentParentId);
-      currentParentId = parent?.parentId ?? null;
-    }
-
-    return ancestors;
+    if (!this.index) return new Set();
+    return getAncestorSet(nodeId, this.index.nodeMap);
   }
 }
 

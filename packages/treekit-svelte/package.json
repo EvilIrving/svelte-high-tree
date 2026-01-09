@@ -2,14 +2,14 @@
   "name": "@light-cat/treekit-svelte",
   "version": "0.0.1",
   "type": "module",
-  "main": "./src/index.ts",
-  "types": "./src/index.ts",
-  "svelte": "./src/index.ts",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "svelte": "./dist/index.js",
   "exports": {
     ".": {
-      "types": "./src/index.ts",
-      "svelte": "./src/index.ts",
-      "import": "./src/index.ts"
+      "types": "./dist/index.d.ts",
+      "svelte": "./dist/index.js",
+      "import": "./dist/index.js"
     }
   },
   "peerDependencies": {
@@ -17,5 +17,11 @@
   },
   "dependencies": {
     "@light-cat/treekit-core": "workspace:*"
+  },
+  "scripts": {
+    "build": "tsup src/index.ts --format=esm --no-dts --external svelte --external @light-cat/treekit-*"
+  },
+  "devDependencies": {
+    "tsup": "^8.5.1"
   }
 }

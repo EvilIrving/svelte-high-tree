@@ -120,6 +120,13 @@ export function getAncestorIds(nodeId: string, index: TreeIndex): string[] {
 }
 
 /**
+ * 获取节点的所有祖先 ID 集合
+ */
+export function getAncestorSet(nodeId: string, index: TreeIndex): Set<string> {
+  return new Set(getAncestorIds(nodeId, index));
+}
+
+/**
  * 获取子树中所有节点 ID（利用 subtreeEnd）
  */
 export function getSubtreeIds(nodeId: string, flatNodes: FlatNode[], index: TreeIndex): string[] {

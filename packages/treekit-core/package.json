@@ -19,5 +19,11 @@
   "keywords": [
     "tree",
     "tree-structure"
-  ]
+  ],
+  "scripts": {
+    "build": "tsup src/index.ts --format=esm --dts"
+  },
+  "devDependencies": {
+    "tsup": "^8.5.1"
+  }
 }

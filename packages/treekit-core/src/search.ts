@@ -32,12 +32,13 @@ export class SearchController {
   ): void {
     // 支持自定义 worker URL（便于不同框架使用）
     const url = workerUrl ?? new URL('./search.worker.ts', import.meta.url);
+    const urlObj = typeof url === 'string' ? new URL(url) : url;
 
     // 检查是否是 data URL（内联 worker），如果是则直接使用
-    if (url.protocol === 'data:') {
-      this.worker = new Worker(url, { type: 'module' });
+    if (urlObj.protocol === 'data:') {
+      this.worker = new Worker(urlObj, { type: 'module' });
     } else {
-      this.worker = new Worker(url, { type: 'module' });
+      this.worker = new Worker(urlObj, { type: 'module' });
     }
 
     this.worker.onmessage = (e: MessageEvent) => {
@@ -60,7 +61,7 @@ export class SearchController {
       }
     };
 
-    this.worker.onerror = (e) => {
+    this.worker.onerror = (e: Event) => {
       console.error('Search worker error:', e);
     };
 

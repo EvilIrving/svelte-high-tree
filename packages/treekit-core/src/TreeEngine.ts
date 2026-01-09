@@ -9,6 +9,7 @@ import {
   expandMultiple,
   collapseSiblings
 } from './algorithms/visibility';
+import { getAncestorIds } from './algorithms/flatten';
 import {
   toggleCheck,
   getCheckState,
@@ -52,6 +53,10 @@ export class TreeEngine {
 
   // ========== 订阅系统 ==========
   private _subscribers: Set<() => void> = new Set();
+
+  // ========== 事务模式 ==========
+  private _batchMode = false;
+  private _pendingNotify = false;
 
   // ========== 可见性缓存 ==========
   private _visibleList: FlatNode[] = [];
@@ -177,7 +182,55 @@ export class TreeEngine {
     return () => this._subscribers.delete(fn);
   }
 
+  /**
+   * 开启事务模式
+   * 在事务模式下，多次状态变更会合并为一次通知
+   */
+  startBatch(): void {
+    this._batchMode = true;
+  }
+
+  /**
+   * 提交事务
+   * 合并所有pending的状态变更并通知订阅者
+   */
+  commit(): void {
+    if (!this._batchMode) return;
+    this._batchMode = false;
+    if (this._pendingNotify) {
+      this._pendingNotify = false;
+      this._recomputeVisibility();
+      this._notifySubscribers();
+    }
+  }
+
+  /**
+   * 在事务中执行操作
+   * @example
+   * engine.batch(() => {
+   *   engine.expandAll();
+   *   engine.checkAll();
+   * });
+   */
+  batch(fn: () => void): void {
+    this.startBatch();
+    try {
+      fn();
+    } finally {
+      this.commit();
+    }
+  }
+
   private _notify(): void {
+    if (this._batchMode) {
+      this._pendingNotify = true;
+    } else {
+      this._recomputeVisibility();
+      this._notifySubscribers();
+    }
+  }
+
+  private _notifySubscribers(): void {
     for (const fn of this._subscribers) {
       fn();
     }
@@ -217,6 +270,16 @@ export class TreeEngine {
    */
   getNodeByVisibleIndex(visibleIndex: number): FlatNode | undefined {
     return this._visibleList[visibleIndex];
+  }
+
+  /**
+   * 根据 visibleIndex 获取对应的 flatIndex（用于引擎操作）
+   * @returns flatIndex，如果找不到返回 -1
+   */
+  getFlatIndexByVisibleIndex(visibleIndex: number): number {
+    const node = this._visibleList[visibleIndex];
+    if (!node) return -1;
+    return this._index.indexMap.get(node.id) ?? -1;
   }
 
   /**
@@ -448,6 +511,15 @@ export class TreeEngine {
     return getCheckState(node, this._flatNodes, this._checkedSet);
   }
 
+  /**
+   * 根据节点 ID 获取勾选状态（供 UI 层使用）
+   */
+  getCheckStateByNodeId(nodeId: string): CheckState {
+    const node = this.getNode(nodeId);
+    if (!node) return 'unchecked';
+    return this.getCheckState(node.index);
+  }
+
   private _updateAncestorsCheckState(parentId: string | null): void {
     updateAncestorsCheckState(parentId, this._flatNodes, this._checkedSet, this._index);
   }
@@ -474,12 +546,10 @@ export class TreeEngine {
     for (const node of this._flatNodes) {
       if (predicate(node)) {
         matchIds.add(node.id);
-        // 向上追溯添加所有祖先
-        let parentId = node.parentId;
-        while (parentId !== null) {
-          filterIds.add(parentId);
-          const parent = this._index.nodeMap.get(parentId);
-          parentId = parent?.parentId ?? null;
+        // 使用公共函数收集祖先
+        const ancestors = getAncestorIds(node.id, this._index);
+        for (const ancestorId of ancestors) {
+          filterIds.add(ancestorId);
         }
       }
     }

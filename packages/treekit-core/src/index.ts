@@ -17,6 +17,7 @@ export { TreeEngine } from './TreeEngine';
 export {
   buildFlatTree,
   getAncestorIds,
+  getAncestorSet,
   getSubtreeIds
 } from './algorithms/flatten';
 

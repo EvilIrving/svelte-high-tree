@@ -1,4 +1,5 @@
-import type { FlatNode } from '../types';
+import type { FlatNode, TreeIndex } from '../types';
+import { getAncestorIds } from './flatten';
 
 /**
  * 计算可见节点列表
@@ -90,16 +91,12 @@ export function expandToNode(
   nodeMap: Map<string, FlatNode>
 ): Set<string> {
   const newSet = new Set(expandedSet);
-  const node = nodeMap.get(nodeId);
-  if (!node) return newSet;
+  if (!nodeMap.has(nodeId)) return newSet;
 
   // 展开所有祖先
-  let currentId = node.parentId;
-  while (currentId !== null) {
-    newSet.add(currentId);
-    const parent = nodeMap.get(currentId);
-    if (!parent) break;
-    currentId = parent.parentId;
+  const ancestors = getAncestorIds(nodeId, { nodeMap } as TreeIndex);
+  for (const id of ancestors) {
+    newSet.add(id);
   }
 
   return newSet;
