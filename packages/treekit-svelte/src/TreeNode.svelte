@@ -86,15 +86,13 @@
 
   {#if showCheckbox}
     <!-- 复选框 -->
-    <label
-      class="treekit-checkbox-wrapper"
-      onclick={(e) => { e.stopPropagation(); onToggleCheck?.(); }}
-    >
+    <label class="treekit-checkbox-wrapper">
       <input
         class="treekit-checkbox-input"
         type="checkbox"
-        checked={checkState === 'checked'}
         tabindex="-1"
+        onclick={(e) => e.stopPropagation()}
+        onchange={(e) => { e.stopPropagation(); onToggleCheck?.(); }}
       />
       <span
         class="treekit-checkbox-visual"

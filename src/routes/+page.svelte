@@ -300,7 +300,7 @@
       <Tree
         bind:this={treeRef}
         {treeData}
-        checkable={false}
+        checkable={true}
         searchable={false}
         itemHeight={32}
         onExpand={handleExpand}
