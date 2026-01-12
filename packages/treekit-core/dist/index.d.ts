@@ -14,6 +14,16 @@ interface RawNode {
     name: string;
     parentId: string | null;
 }
+type CheckState = 'checked' | 'unchecked' | 'indeterminate';
+declare const DEFAULT_FIELD_MAPPER: Required<FieldMapper>;
+interface NodeStatus {
+    isExpanded: boolean;
+    isChecked: boolean;
+    isIndeterminate: boolean;
+    isVisible: boolean;
+    visibleIndex: number;
+}
+
 interface FlatNode {
     id: string;
     name: string;
@@ -29,7 +39,6 @@ interface TreeIndex {
     childrenMap: Map<string | null, string[]>;
     rootIds: string[];
 }
-type CheckState = 'checked' | 'unchecked' | 'indeterminate';
 interface TreeOptions {
     /** 启用 checkbox 功能 */
     checkable?: boolean;
@@ -50,15 +59,7 @@ interface TreeOptions {
     /** 字段映射配置 */
     fieldMapper?: FieldMapper;
 }
-declare const DEFAULT_FIELD_MAPPER: Required<FieldMapper>;
 declare const DEFAULT_TREE_OPTIONS: Required<TreeOptions>;
-interface NodeStatus {
-    isExpanded: boolean;
-    isChecked: boolean;
-    isIndeterminate: boolean;
-    isVisible: boolean;
-    visibleIndex: number;
-}
 
 /**
  * TreeEngine - 树形数据结构引擎
@@ -305,7 +306,7 @@ declare function toggleCheck(nodeId: string, flatNodes: FlatNode[], checkedSet: 
 /**
  * 获取单个节点的显示状态（只在渲染时调用）
  */
-declare function getCheckState(node: FlatNode, flatNodes: FlatNode[], checkedSet: Set<string>): CheckState;
+declare function getCheckState(node: FlatNode, flatNodes: FlatNode[], checkedSet: ReadonlySet<string>): CheckState;
 /**
  * 全选
  */

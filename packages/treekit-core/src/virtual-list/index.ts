@@ -1,5 +1,5 @@
-import type { FlatNode } from './types';
-import { getCheckState } from './algorithms';
+import type { FlatNode } from '../core/types';
+import { getCheckState } from '../algorithms';
 
 // 重新导出 core 的 getCheckState 作为 getNodeCheckState（兼容旧代码）
 export { getCheckState as getNodeCheckState };

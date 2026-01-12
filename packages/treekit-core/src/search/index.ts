@@ -31,7 +31,7 @@ export class SearchController {
     workerUrl?: string
   ): void {
     // 支持自定义 worker URL（便于不同框架使用）
-    const url = workerUrl ?? new URL('./search.worker.ts', import.meta.url);
+    const url = workerUrl ?? new URL('./worker.ts', import.meta.url);
     const urlObj = typeof url === 'string' ? new URL(url) : url;
 
     // 检查是否是 data URL（内联 worker），如果是则直接使用

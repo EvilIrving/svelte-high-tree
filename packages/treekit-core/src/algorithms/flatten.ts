@@ -1,5 +1,6 @@
-import type { RawNode, FlatNode, TreeIndex, FieldMapper } from '../types';
+import type { RawNode, FieldMapper } from '../types';
 import { DEFAULT_FIELD_MAPPER } from '../types';
+import type { FlatNode, TreeIndex } from '../core/types';
 
 /**
  * 将邻接表转换为扁平化数组 + 索引结构

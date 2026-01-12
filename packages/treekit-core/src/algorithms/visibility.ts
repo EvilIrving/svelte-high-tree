@@ -1,4 +1,4 @@
-import type { FlatNode, TreeIndex } from '../types';
+import type { FlatNode, TreeIndex } from '../core/types';
 import { getAncestorIDs } from './flatten';
 
 /**

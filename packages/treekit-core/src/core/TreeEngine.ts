@@ -1,6 +1,8 @@
-import type { RawNode, FlatNode, TreeIndex, TreeOptions, NodeStatus, FieldMapper, CheckState } from './types';
-import { DEFAULT_TREE_OPTIONS, DEFAULT_FIELD_MAPPER } from './types';
-import { buildFlatTree, getAncestorIDs } from './algorithms/flatten';
+import type { RawNode, NodeStatus, FieldMapper, CheckState } from '../types';
+import { DEFAULT_FIELD_MAPPER } from '../types';
+import type { FlatNode, TreeIndex, TreeOptions } from './types';
+import { DEFAULT_TREE_OPTIONS } from './types';
+import { buildFlatTree, getAncestorIDs } from '../algorithms/flatten';
 import {
   computeVisibleNodes,
   computeFilteredVisibleNodes,
@@ -8,7 +10,7 @@ import {
   expandToNode,
   expandMultiple,
   collapseSiblings
-} from './algorithms/visibility';
+} from '../algorithms/visibility';
 import {
   toggleCheck,
   getCheckState,
@@ -16,7 +18,7 @@ import {
   uncheckAll,
   getCheckedLeafIDs,
   updateAncestorsCheckState
-} from './algorithms/checkbox';
+} from '../algorithms/checkbox';
 
 /**
  * TreeEngine - 树形数据结构引擎

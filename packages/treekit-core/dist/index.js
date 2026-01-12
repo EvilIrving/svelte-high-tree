@@ -14,6 +14,8 @@ var DEFAULT_FIELD_MAPPER = {
   name: "name",
   children: "children"
 };
+
+// src/core/types.ts
 var DEFAULT_TREE_OPTIONS = {
   checkable: false,
   accordion: false,
@@ -254,7 +256,7 @@ function getCheckedLeafIDs(flatNodes, checkedSet) {
   return flatNodes.filter((n) => !n.hasChildren && checkedSet.has(n.id)).map((n) => n.id);
 }
 
-// src/TreeEngine.ts
+// src/core/TreeEngine.ts
 var _flatNodes, _index, _expandedSet, _checkedSet, _selectedId, _filterSet, _matchSet, _options, _fieldMapper, _subscribers, _batchMode, _pendingNotify, _visibleList, _visibleIndexMap, _TreeEngine_instances, notify_fn, notifySubscribers_fn, recomputeVisibility_fn, updateAncestorsCheckState_fn;
 var TreeEngine = class {
   // id → visibleIndex
@@ -810,7 +812,7 @@ updateAncestorsCheckState_fn = function(parentId) {
   updateAncestorsCheckState(parentId, __privateGet(this, _flatNodes), __privateGet(this, _checkedSet), __privateGet(this, _index));
 };
 
-// src/virtual-list.ts
+// src/virtual-list/index.ts
 var VirtualListController = class {
   constructor(options) {
     this.container = null;
@@ -983,7 +985,7 @@ function calculateVisibleRange(scrollTop, viewportHeight, itemHeight, totalCount
   };
 }
 
-// src/search.ts
+// src/search/index.ts
 var _worker, _debounceTimer, _debounceMs, _onResult, _isReady, _pendingSearch;
 var SearchController = class {
   constructor(options) {
@@ -1001,7 +1003,7 @@ var SearchController = class {
    * @param searchData 搜索数据，需要包含 id, name, parentId 字段
    */
   init(searchData, workerUrl) {
-    const url = workerUrl ?? new URL("./search.worker.ts", import.meta.url);
+    const url = workerUrl ?? new URL("./worker.ts", import.meta.url);
     const urlObj = typeof url === "string" ? new URL(url) : url;
     if (urlObj.protocol === "data:") {
       __privateSet(this, _worker, new Worker(urlObj, { type: "module" }));
@@ -1133,7 +1135,7 @@ function searchSync(keyword, nodes) {
   return { matchIds, expandIds };
 }
 
-// src/search-config.ts
+// src/search/config.ts
 var DEFAULT_SEARCH_CONFIG = {
   enableNavigation: true,
   enableLoop: true,

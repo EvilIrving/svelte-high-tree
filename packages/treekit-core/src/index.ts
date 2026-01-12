@@ -1,17 +1,21 @@
 // Types
 export type {
   RawNode,
-  FlatNode,
-  TreeIndex,
-  TreeOptions,
   NodeStatus,
   FieldMapper,
   CheckState
 } from './types';
-export { DEFAULT_TREE_OPTIONS, DEFAULT_FIELD_MAPPER } from './types';
+export { DEFAULT_FIELD_MAPPER } from './types';
+
+export type {
+  FlatNode,
+  TreeIndex,
+  TreeOptions
+} from './core/types';
+export { DEFAULT_TREE_OPTIONS } from './core/types';
 
 // Core
-export { TreeEngine } from './TreeEngine';
+export { TreeEngine } from './core/TreeEngine';
 
 // Algorithms
 export {
@@ -48,4 +52,4 @@ export {
 
 // Search
 export { SearchController, searchSync, type SearchResult } from './search';
-export { DEFAULT_SEARCH_CONFIG, createSearchConfig, type SearchConfig } from './search-config';
+export { DEFAULT_SEARCH_CONFIG, createSearchConfig, type SearchConfig } from './search/config';

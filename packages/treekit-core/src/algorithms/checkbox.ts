@@ -1,4 +1,5 @@
-import type { FlatNode, TreeIndex, CheckState } from '../types';
+import type { CheckState } from '../types';
+import type { FlatNode, TreeIndex } from '../core/types';
 
 /**
  * 切换节点勾选状态

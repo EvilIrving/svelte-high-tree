@@ -1,5 +1,6 @@
 // src/createTree.svelte.ts
 import { TreeEngine } from "@light-cat/treekit-core";
+import { SvelteSet } from "svelte/reactivity";
 function createTree(nodes, options) {
   const engine = new TreeEngine(options);
   let flatNodes = $state.raw([]);
@@ -9,9 +10,9 @@ function createTree(nodes, options) {
   let checkedCount = $state.raw(0);
   let matchCount = $state.raw(0);
   let selectedId = $state.raw(null);
-  let checkedSet = $state.raw(/* @__PURE__ */ new Set());
-  let expandedSet = $state.raw(/* @__PURE__ */ new Set());
-  let matchSet = $state.raw(/* @__PURE__ */ new Set());
+  const checkedSet = new SvelteSet();
+  const expandedSet = new SvelteSet();
+  const matchSet = new SvelteSet();
   const syncState = () => {
     flatNodes = engine.flatNodes;
     totalCount = engine.totalCount;
@@ -20,10 +21,16 @@ function createTree(nodes, options) {
     checkedCount = engine.checkedCount;
     matchCount = engine.matchCount;
     selectedId = engine.selectedId;
-    checkedSet = engine.checkedSet;
-    expandedSet = engine.expandedSet;
-    matchSet = engine.matchSet;
+    syncSet(checkedSet, engine.checkedSet);
+    syncSet(expandedSet, engine.expandedSet);
+    syncSet(matchSet, engine.matchSet);
   };
+  function syncSet(svelteSet, sourceSet) {
+    if (svelteSet.size !== sourceSet.size || [...svelteSet].some((v) => !sourceSet.has(v))) {
+      svelteSet.clear();
+      sourceSet.forEach((v) => svelteSet.add(v));
+    }
+  }
   const unsubscribe = engine.subscribe(() => {
     syncState();
   });
@@ -157,8 +164,8 @@ function createTree(nodes, options) {
     getCheckStateByNodeId(nodeId) {
       return engine.getCheckStateByNodeId(nodeId);
     },
-    getCheckedLeafIds() {
-      return engine.getCheckedLeafIds();
+    getCheckedLeafIDs() {
+      return engine.getCheckedLeafIDs();
     },
     getVisibleIndex(nodeId) {
       return engine.getVisibleIndex(nodeId);
@@ -571,9 +578,9 @@ function Tree($$anchor, $$props) {
   const tree = createTree($$props.treeData, {
     checkable: checkable(),
     checkStrictly: checkStrictly(),
-    defaultCheckedIds: defaultCheckedKeys(),
-    defaultExpandedIds: defaultExpandedKeys(),
-    defaultSelectedIds: defaultSelectedKeys(),
+    defaultCheckedKeys: defaultCheckedKeys(),
+    defaultExpandedKeys: defaultExpandedKeys(),
+    defaultSelectedKeys: defaultSelectedKeys(),
     fieldMapper: $$props.fieldMapper
   });
   let virtualTreeRef;
@@ -667,7 +674,7 @@ function Tree($$anchor, $$props) {
     virtualTreeRef?.scrollToNode(nodeId);
   }
   function getCheckedLeafKeys() {
-    return tree.getCheckedLeafIds();
+    return tree.getCheckedLeafIDs();
   }
   function getCheckedKeys() {
     return Array.from(tree.checkedSet);
@@ -801,9 +808,10 @@ function Tree($$anchor, $$props) {
 
 // src/index.ts
 import { SearchController as SearchController2, searchSync } from "@light-cat/treekit-core";
-import { defaultSearchConfig, createSearchConfig as createSearchConfig2 } from "@light-cat/treekit-core";
+import { DEFAULT_SEARCH_CONFIG, createSearchConfig as createSearchConfig2 } from "@light-cat/treekit-core";
 import { VirtualListController as VirtualListController2, calculateVisibleRange, getNodeCheckState as getNodeCheckState2 } from "@light-cat/treekit-core";
 export {
+  DEFAULT_SEARCH_CONFIG,
   SearchController2 as SearchController,
   SearchNavigator,
   Tree,
@@ -814,7 +822,6 @@ export {
   createSearchConfig2 as createSearchConfig,
   createSearchNavigator,
   createTree,
-  defaultSearchConfig,
   getNodeCheckState2 as getNodeCheckState,
   searchSync
 };
