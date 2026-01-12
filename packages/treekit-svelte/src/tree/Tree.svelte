@@ -202,11 +202,19 @@
 	/** 全选 */
 	export function checkAll() {
 		tree.checkAll();
+		// 触发 onCheck 回调
+		const checkedKeys = Array.from(tree.checkedSet);
+		const node = tree.flatNodes[0] || null;
+		onCheck?.(checkedKeys, { node: node!, checked: true });
 	}
 
 	/** 取消全选 */
 	export function uncheckAll() {
 		tree.uncheckAll();
+		// 触发 onCheck 回调
+		const checkedKeys = Array.from(tree.checkedSet);
+		const node = tree.flatNodes[0] || null;
+		onCheck?.(checkedKeys, { node: node!, checked: false });
 	}
 
 	/** 滚动到指定节点 */

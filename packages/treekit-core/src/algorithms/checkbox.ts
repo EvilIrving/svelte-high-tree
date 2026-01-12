@@ -75,7 +75,7 @@ function isSubtreeFullyChecked(
   flatNodes: TreeNode[],
   checkedSet: Set<string>
 ): boolean {
-  for (let i = node.index; i <= node.subtreeEnd; i++) {
+  for (let i = node.index + 1; i <= node.subtreeEnd; i++) {
     if (!checkedSet.has(flatNodes[i].id)) {
       return false;
     }
