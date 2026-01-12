@@ -479,7 +479,14 @@ export class TreeEngine {
    * 全选
    */
   checkAll(): void {
-    this.#checkedSet = checkAll(this.#flatNodes);
+    if (this.#options.checkStrictly) {
+      // 严格模式：只选中根节点（无父节点的节点）
+      const rootIds = this.#index.rootIds;
+      this.#checkedSet = new Set(rootIds);
+    } else {
+      // 联动模式：选中所有节点
+      this.#checkedSet = checkAll(this.#flatNodes);
+    }
     this.#notify();
   }
 
@@ -487,7 +494,16 @@ export class TreeEngine {
    * 全不选
    */
   uncheckAll(): void {
-    this.#checkedSet = uncheckAll();
+    if (this.#options.checkStrictly) {
+      // 严格模式：只清空根节点的选中状态
+      const rootIds = this.#index.rootIds;
+      for (const id of rootIds) {
+        this.#checkedSet.delete(id);
+      }
+    } else {
+      // 联动模式：清空所有选中
+      this.#checkedSet = uncheckAll();
+    }
     this.#notify();
   }
 

@@ -67,6 +67,11 @@
 		fieldMapper
 	});
 
+	// 响应 checkStrictly 变化，更新引擎配置
+	$effect(() => {
+		tree.setOptions({ checkStrictly });
+	});
+
 	// VirtualTree 引用
 	let virtualTreeRef: VirtualTree;
 
