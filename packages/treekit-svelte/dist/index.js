@@ -308,7 +308,7 @@ function TreeNode($$anchor, $$props) {
 $.delegate(["click", "change"]);
 
 // src/VirtualTree.svelte
-import { VirtualListController, getNodeCheckState } from "@light-cat/treekit-core";
+import { VirtualListController, getCheckState } from "@light-cat/treekit-core";
 var root2 = $2.from_html(`<div class="treekit-virtual"><div class="treekit-virtual-spacer"><div class="treekit-virtual-sentinel"></div> <div class="treekit-virtual-viewport"></div> <div class="treekit-virtual-sentinel"></div></div></div>`);
 function VirtualTree($$anchor, $$props) {
   $2.push($$props, true);
@@ -317,7 +317,7 @@ function VirtualTree($$anchor, $$props) {
     if (checkStrictly()) {
       return $$props.checkedSet.has(node.id) ? "checked" : "unchecked";
     }
-    return getNodeCheckState(node, $$props.flatNodes, $$props.checkedSet);
+    return getCheckState(node, $$props.flatNodes, $$props.checkedSet);
   }
   function isNodeExpanded(nodeId) {
     return $$props.expandedSet.has(nodeId);
@@ -809,7 +809,7 @@ function Tree($$anchor, $$props) {
 // src/index.ts
 import { SearchController as SearchController2, searchSync } from "@light-cat/treekit-core";
 import { DEFAULT_SEARCH_CONFIG, createSearchConfig as createSearchConfig2 } from "@light-cat/treekit-core";
-import { VirtualListController as VirtualListController2, calculateVisibleRange, getNodeCheckState as getNodeCheckState2 } from "@light-cat/treekit-core";
+import { VirtualListController as VirtualListController2, calculateVisibleRange, getCheckState as getCheckState2 } from "@light-cat/treekit-core";
 export {
   DEFAULT_SEARCH_CONFIG,
   SearchController2 as SearchController,
@@ -822,6 +822,6 @@ export {
   createSearchConfig2 as createSearchConfig,
   createSearchNavigator,
   createTree,
-  getNodeCheckState2 as getNodeCheckState,
+  getCheckState2 as getCheckState,
   searchSync
 };

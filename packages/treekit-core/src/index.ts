@@ -8,7 +8,7 @@ export type {
 export { DEFAULT_FIELD_MAPPER } from './types';
 
 export type {
-  FlatNode,
+  TreeNode,
   TreeIndex,
   TreeOptions
 } from './core/types';
@@ -46,8 +46,7 @@ export {
 export {
   VirtualListController,
   calculateVisibleRange,
-  type VirtualListState,
-  getNodeCheckState
+  type VirtualListState
 } from './virtual-list';
 
 // Search

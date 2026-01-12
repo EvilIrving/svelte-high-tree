@@ -1,6 +1,6 @@
 import type { RawNode, FieldMapper } from '../types';
 import { DEFAULT_FIELD_MAPPER } from '../types';
-import type { FlatNode, TreeIndex } from '../core/types';
+import type { TreeNode, TreeIndex } from '../core/types';
 
 /**
  * 将邻接表转换为扁平化数组 + 索引结构
@@ -13,7 +13,7 @@ export function buildFlatTree(
   rawNodes: RawNode[],
   fieldMapper?: FieldMapper
 ): {
-  flatNodes: FlatNode[];
+  flatNodes: TreeNode[];
   index: TreeIndex;
 } {
   const mapper = { ...DEFAULT_FIELD_MAPPER, ...fieldMapper };
@@ -37,8 +37,8 @@ export function buildFlatTree(
   const rootIds = childrenMap.get(null) ?? [];
 
   // Step 2: 迭代 DFS 生成 flatNodes（同时计算 subtreeEnd）
-  const flatNodes: FlatNode[] = [];
-  const nodeMap = new Map<string, FlatNode>();
+  const flatNodes: TreeNode[] = [];
+  const nodeMap = new Map<string, TreeNode>();
   const indexMap = new Map<string, number>();
 
   // 使用栈进行迭代 DFS
@@ -60,12 +60,12 @@ export function buildFlatTree(
     const { id, depth, phase } = item;
 
     if (phase === 'enter') {
-      // 进入节点：创建 FlatNode
+      // 进入节点：创建 TreeNode
       const raw = rawMap.get(id)!;
       const children = childrenMap.get(id) ?? [];
       const index = flatNodes.length;
 
-      const flatNode: FlatNode = {
+      const flatNode: TreeNode = {
         id: String(raw[idKey]),
         name: String(raw[nameKey]),
         parentId: raw[parentIdKey] as string | null,
@@ -130,7 +130,7 @@ export function getAncestorSet(nodeId: string, index: TreeIndex): Set<string> {
 /**
  * 获取子树中所有节点 ID（利用 subtreeEnd）
  */
-export function getSubtreeIDs(nodeId: string, flatNodes: FlatNode[], index: TreeIndex): string[] {
+export function getSubtreeIDs(nodeId: string, flatNodes: TreeNode[], index: TreeIndex): string[] {
   const node = index.nodeMap.get(nodeId);
   if (!node) return [];
 

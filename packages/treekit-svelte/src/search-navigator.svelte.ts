@@ -1,4 +1,4 @@
-import type { FlatNode, TreeIndex } from '@light-cat/treekit-core';
+import type { TreeNode, TreeIndex } from '@light-cat/treekit-core';
 import type { SearchConfig } from '@light-cat/treekit-core';
 import { getAncestorSet } from '@light-cat/treekit-core';
 

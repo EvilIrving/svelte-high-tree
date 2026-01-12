@@ -1,12 +1,12 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
-  import type { FlatNode, TreeIndex, CheckState } from '@light-cat/treekit-core';
-  import TreeNode from './TreeNode.svelte';
-  import { VirtualListController, getNodeCheckState, type VirtualListState } from '@light-cat/treekit-core';
+  import type { TreeNode, TreeIndex, CheckState } from '@light-cat/treekit-core';
+  import TreeNodeComponent from './TreeNode.svelte';
+  import { VirtualListController, getCheckState, type VirtualListState } from '@light-cat/treekit-core';
 
   interface Props {
-    visibleList: FlatNode[];
-    flatNodes: FlatNode[];
+    visibleList: TreeNode[];
+    flatNodes: TreeNode[];
     expandedSet: ReadonlySet<string>;
     checkedSet: ReadonlySet<string>;
     matchSet?: ReadonlySet<string>;
@@ -41,12 +41,12 @@
   /**
    * 获取节点勾选状态（支持 checkStrictly 模式）
    */
-  function getCheckStateForNode(node: FlatNode): CheckState {
+  function getCheckStateForNode(node: TreeNode): CheckState {
     if (checkStrictly) {
       // 严格模式：只看自身是否在 checkedSet 中，无半选
       return checkedSet.has(node.id) ? 'checked' : 'unchecked';
     }
-    return getNodeCheckState(node, flatNodes, checkedSet);
+    return getCheckState(node, flatNodes, checkedSet);
   }
 
   /**
@@ -134,7 +134,7 @@
     <!-- 渲染区域 -->
     <div class="treekit-virtual-viewport" style:top="{offsetTop}px">
       {#each renderList as node (node.id)}
-        <TreeNode
+        <TreeNodeComponent
           {node}
           expanded={isNodeExpanded(node.id)}
           checkState={getCheckStateForNode(node)}

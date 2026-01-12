@@ -1165,7 +1165,6 @@ export {
   getAncestorSet,
   getCheckState,
   getCheckedLeafIDs,
-  getCheckState as getNodeCheckState,
   getSubtreeIDs,
   searchSync,
   toggleCheck,

@@ -1,4 +1,4 @@
-import { TreeEngine, type RawNode, type TreeOptions, type FlatNode, type NodeStatus, type TreeIndex, type CheckState } from '@light-cat/treekit-core';
+import { TreeEngine, type RawNode, type TreeOptions, type TreeNode, type NodeStatus, type TreeIndex, type CheckState } from '@light-cat/treekit-core';
 import { SvelteSet } from 'svelte/reactivity';
 
 /**
@@ -14,11 +14,11 @@ export function createTree(nodes?: RawNode[], options?: TreeOptions) {
   const engine = new TreeEngine(options);
 
   // 大数据：普通数组，不进入响应式系统
-  let flatNodes: FlatNode[] = $state.raw([]);
+  let flatNodes: TreeNode[] = $state.raw([]);
   let totalCount = $state.raw(0);
 
   // 小状态：响应式
-  let visibleList: FlatNode[] = $state.raw([]);
+  let visibleList: TreeNode[] = $state.raw([]);
   let visibleCount = $state.raw(0);
   let checkedCount = $state.raw(0);
   let matchCount = $state.raw(0);
@@ -30,9 +30,9 @@ export function createTree(nodes?: RawNode[], options?: TreeOptions) {
 
   // 内部状态同步
   const syncState = () => {
-    flatNodes = engine.flatNodes as FlatNode[];
+    flatNodes = engine.flatNodes as TreeNode[];
     totalCount = engine.totalCount;
-    visibleList = engine.visibleList as FlatNode[];
+    visibleList = engine.visibleList as TreeNode[];
     visibleCount = engine.visibleCount;
     checkedCount = engine.checkedCount;
     matchCount = engine.matchCount;
@@ -145,7 +145,7 @@ export function createTree(nodes?: RawNode[], options?: TreeOptions) {
     },
 
     // 过滤/搜索
-    setFilter(predicate: ((node: FlatNode) => boolean) | null) {
+    setFilter(predicate: ((node: TreeNode) => boolean) | null) {
       engine.setFilter(predicate);
     },
 

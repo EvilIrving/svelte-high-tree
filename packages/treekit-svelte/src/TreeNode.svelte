@@ -1,9 +1,9 @@
 <script lang="ts">
-  import type { FlatNode, CheckState } from '@light-cat/treekit-core';
+  import type { TreeNode, CheckState } from '@light-cat/treekit-core';
 
   interface Props {
     /** 节点数据 */
-    node: FlatNode;
+    node: TreeNode;
     /** 是否展开 */
     expanded: boolean;
     /** 勾选状态 */

@@ -1,5 +1,5 @@
 import type { CheckState } from '../types';
-import type { FlatNode, TreeIndex } from '../core/types';
+import type { TreeNode, TreeIndex } from '../core/types';
 
 /**
  * 切换节点勾选状态
@@ -7,7 +7,7 @@ import type { FlatNode, TreeIndex } from '../core/types';
  */
 export function toggleCheck(
   nodeId: string,
-  flatNodes: FlatNode[],
+  flatNodes: TreeNode[],
   checkedSet: Set<string>,
   index: TreeIndex
 ): Set<string> {
@@ -44,7 +44,7 @@ export function toggleCheck(
  */
 export function updateAncestorsCheckState(
   parentId: string | null,
-  flatNodes: FlatNode[],
+  flatNodes: TreeNode[],
   checkedSet: Set<string>,
   index: TreeIndex
 ): void {
@@ -71,8 +71,8 @@ export function updateAncestorsCheckState(
  * 检查子树是否完全勾选（利用 subtreeEnd 遍历连续区间）
  */
 function isSubtreeFullyChecked(
-  node: FlatNode,
-  flatNodes: FlatNode[],
+  node: TreeNode,
+  flatNodes: TreeNode[],
   checkedSet: Set<string>
 ): boolean {
   for (let i = node.index; i <= node.subtreeEnd; i++) {
@@ -87,8 +87,8 @@ function isSubtreeFullyChecked(
  * 检查子树是否有任何节点勾选
  */
 function isSubtreeHasAnyChecked(
-  node: FlatNode,
-  flatNodes: FlatNode[],
+  node: TreeNode,
+  flatNodes: TreeNode[],
   checkedSet: ReadonlySet<string>
 ): boolean {
   for (let i = node.index + 1; i <= node.subtreeEnd; i++) {
@@ -103,8 +103,8 @@ function isSubtreeHasAnyChecked(
  * 获取单个节点的显示状态（只在渲染时调用）
  */
 export function getCheckState(
-  node: FlatNode,
-  flatNodes: FlatNode[],
+  node: TreeNode,
+  flatNodes: TreeNode[],
   checkedSet: ReadonlySet<string>
 ): CheckState {
   // 自身已勾选
@@ -130,7 +130,7 @@ export function getCheckState(
  */
 export function checkNodes(
   nodeIds: string[],
-  flatNodes: FlatNode[],
+  flatNodes: TreeNode[],
   checkedSet: Set<string>,
   index: TreeIndex
 ): Set<string> {
@@ -167,7 +167,7 @@ export function checkNodes(
  */
 export function uncheckNodes(
   nodeIds: string[],
-  flatNodes: FlatNode[],
+  flatNodes: TreeNode[],
   checkedSet: Set<string>,
   index: TreeIndex
 ): Set<string> {
@@ -198,7 +198,7 @@ export function uncheckNodes(
 /**
  * 全选
  */
-export function checkAll(flatNodes: FlatNode[]): Set<string> {
+export function checkAll(flatNodes: TreeNode[]): Set<string> {
   return new Set(flatNodes.map((n) => n.id));
 }
 
@@ -212,6 +212,6 @@ export function uncheckAll(): Set<string> {
 /**
  * 获取所有已选中的叶子节点 ID
  */
-export function getCheckedLeafIDs(flatNodes: FlatNode[], checkedSet: Set<string>): string[] {
+export function getCheckedLeafIDs(flatNodes: TreeNode[], checkedSet: Set<string>): string[] {
   return flatNodes.filter((n) => !n.hasChildren && checkedSet.has(n.id)).map((n) => n.id);
 }

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount, onDestroy } from 'svelte';
-	import type { FlatNode, RawNode, FieldMapper } from '@light-cat/treekit-core';
+	import type { TreeNode, RawNode, FieldMapper } from '@light-cat/treekit-core';
 	import { expandMultiple } from '@light-cat/treekit-core';
 	import { createTree } from './createTree.svelte';
 	import VirtualTree from './VirtualTree.svelte';
@@ -33,11 +33,11 @@
 		/** 额外 class */
 		class?: string;
 		/** 勾选回调 */
-		onCheck?: (checkedKeys: string[], info: { node: FlatNode; checked: boolean }) => void;
+		onCheck?: (checkedKeys: string[], info: { node: TreeNode; checked: boolean }) => void;
 		/** 选中回调 */
-		onSelect?: (selectedKeys: string[], info: { node: FlatNode; selected: boolean }) => void;
+		onSelect?: (selectedKeys: string[], info: { node: TreeNode; selected: boolean }) => void;
 		/** 展开/收起回调 */
-		onExpand?: (expandedKeys: string[], info: { node: FlatNode; expanded: boolean }) => void;
+		onExpand?: (expandedKeys: string[], info: { node: TreeNode; expanded: boolean }) => void;
 	}
 
 	let {

@@ -11,6 +11,6 @@ export { DEFAULT_SEARCH_CONFIG, createSearchConfig, type SearchConfig } from '@l
 export { SearchNavigator, createSearchNavigator, type NavigateResult } from './search-navigator.svelte';
 
 // 虚拟列表（核心逻辑）
-export { VirtualListController, calculateVisibleRange, getNodeCheckState, type VirtualListState } from '@light-cat/treekit-core';
+export { VirtualListController, calculateVisibleRange, getCheckState, type VirtualListState } from '@light-cat/treekit-core';
 
-export type { FlatNode, RawNode, TreeOptions, NodeStatus, CheckState } from '@light-cat/treekit-core';
+export type { TreeNode, RawNode, TreeOptions, NodeStatus, CheckState } from '@light-cat/treekit-core';

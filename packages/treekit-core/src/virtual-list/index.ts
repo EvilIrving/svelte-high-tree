@@ -1,8 +1,7 @@
-import type { FlatNode } from '../core/types';
+import type { TreeNode } from '../core/types';
 import { getCheckState } from '../algorithms';
 
-// 重新导出 core 的 getCheckState 作为 getNodeCheckState（兼容旧代码）
-export { getCheckState as getNodeCheckState };
+export { getCheckState };
 
 /**
  * 虚拟列表状态
@@ -17,7 +16,7 @@ export interface VirtualListState {
  * 虚拟列表控制器
  * 使用 IntersectionObserver 实现高性能虚拟滚动
  */
-export class VirtualListController<T = FlatNode> {
+export class VirtualListController<T = TreeNode> {
   private container: HTMLElement | null = null;
   private topSentinel: HTMLElement | null = null;
   private bottomSentinel: HTMLElement | null = null;

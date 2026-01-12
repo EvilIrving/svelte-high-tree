@@ -22,8 +22,6 @@ export interface TreeNode {
   hasChildren: boolean;
 }
 
-/** @deprecated 请使用 TreeNode */
-export type FlatNode = TreeNode;
 
 // ============ 索引结构（O(1) 查询） ============
 export interface TreeIndex {

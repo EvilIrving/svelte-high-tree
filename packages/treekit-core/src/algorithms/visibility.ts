@@ -1,4 +1,4 @@
-import type { FlatNode, TreeIndex } from '../core/types';
+import type { TreeNode, TreeIndex } from '../core/types';
 import { getAncestorIDs } from './flatten';
 
 /**
@@ -6,10 +6,10 @@ import { getAncestorIDs } from './flatten';
  * 利用 subtreeEnd 跳过折叠的子树，时间复杂度 O(visibleCount)
  */
 export function computeVisibleNodes(
-  flatNodes: FlatNode[],
+  flatNodes: TreeNode[],
   expandedSet: Set<string>
-): FlatNode[] {
-  const visible: FlatNode[] = [];
+): TreeNode[] {
+  const visible: TreeNode[] = [];
   let i = 0;
 
   while (i < flatNodes.length) {
@@ -33,16 +33,16 @@ export function computeVisibleNodes(
  * 只显示匹配节点 + 其祖先路径
  */
 export function computeFilteredVisibleNodes(
-  flatNodes: FlatNode[],
+  flatNodes: TreeNode[],
   expandedSet: Set<string>,
   filterSet: Set<string>
-): FlatNode[] {
+): TreeNode[] {
   // 如果没有过滤条件，走正常逻辑
   if (filterSet.size === 0) {
     return computeVisibleNodes(flatNodes, expandedSet);
   }
 
-  const visible: FlatNode[] = [];
+  const visible: TreeNode[] = [];
   let i = 0;
 
   while (i < flatNodes.length) {
@@ -88,7 +88,7 @@ export function toggleExpand(nodeId: string, expandedSet: Set<string>): Set<stri
 export function expandToNode(
   nodeId: string,
   expandedSet: Set<string>,
-  nodeMap: Map<string, FlatNode>
+  nodeMap: Map<string, TreeNode>
 ): Set<string> {
   const newSet = new Set(expandedSet);
   if (!nodeMap.has(nodeId)) return newSet;
@@ -109,9 +109,9 @@ export function expandToNode(
 export function toggleSubtree(
   nodeId: string,
   expand: boolean,
-  flatNodes: FlatNode[],
+  flatNodes: TreeNode[],
   expandedSet: Set<string>,
-  nodeMap: Map<string, FlatNode>
+  nodeMap: Map<string, TreeNode>
 ): Set<string> {
   const newSet = new Set(expandedSet);
   const node = nodeMap.get(nodeId);
@@ -148,9 +148,9 @@ export function expandMultiple(nodeIds: Iterable<string>, expandedSet: Set<strin
  */
 export function collapseSiblings(
   nodeId: string,
-  flatNodes: FlatNode[],
+  flatNodes: TreeNode[],
   expandedSet: Set<string>,
-  nodeMap: Map<string, FlatNode>
+  nodeMap: Map<string, TreeNode>
 ): Set<string> {
   const newSet = new Set(expandedSet);
   const node = nodeMap.get(nodeId);

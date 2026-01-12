@@ -1,6 +1,6 @@
 import type { RawNode, NodeStatus, FieldMapper, CheckState } from '../types';
 import { DEFAULT_FIELD_MAPPER } from '../types';
-import type { FlatNode, TreeIndex, TreeOptions } from './types';
+import type { TreeNode, TreeIndex, TreeOptions } from './types';
 import { DEFAULT_TREE_OPTIONS } from './types';
 import { buildFlatTree, getAncestorIDs } from '../algorithms/flatten';
 import {
@@ -35,7 +35,7 @@ import {
  */
 export class TreeEngine {
   // ========== 大数据：普通变量 ==========
-  #flatNodes: FlatNode[] = [];
+  #flatNodes: TreeNode[] = [];
   #index: TreeIndex = {
     nodeMap: new Map(),
     indexMap: new Map(),
@@ -60,7 +60,7 @@ export class TreeEngine {
   #pendingNotify = false;
 
   // ========== 可见性缓存 ==========
-  #visibleList: FlatNode[] = [];
+  #visibleList: TreeNode[] = [];
   #visibleIndexMap = new Map<string, number>(); // id → visibleIndex
 
   constructor(options?: TreeOptions) {
@@ -86,7 +86,7 @@ export class TreeEngine {
 
   // ========== 公共只读属性 ==========
 
-  get flatNodes(): readonly FlatNode[] {
+  get flatNodes(): readonly TreeNode[] {
     return this.#flatNodes;
   }
 
@@ -94,7 +94,7 @@ export class TreeEngine {
     return this.#index;
   }
 
-  get visibleList(): readonly FlatNode[] {
+  get visibleList(): readonly TreeNode[] {
     return this.#visibleList;
   }
 
@@ -262,14 +262,14 @@ export class TreeEngine {
   /**
    * 根据 id 获取节点
    */
-  getNode(nodeId: string): FlatNode | undefined {
+  getNode(nodeId: string): TreeNode | undefined {
     return this.#index.nodeMap.get(nodeId);
   }
 
   /**
    * 根据 visibleIndex 获取节点
    */
-  getNodeByVisibleIndex(visibleIndex: number): FlatNode | undefined {
+  getNodeByVisibleIndex(visibleIndex: number): TreeNode | undefined {
     return this.#visibleList[visibleIndex];
   }
 
@@ -531,7 +531,7 @@ export class TreeEngine {
    * 设置过滤函数
    * @param predicate 返回 true 表示节点应显示
    */
-  setFilter(predicate: ((node: FlatNode) => boolean) | null): void {
+  setFilter(predicate: ((node: TreeNode) => boolean) | null): void {
     if (!this.#options.filterable || !predicate) {
       this.#filterSet = new Set();
       this.#matchSet = new Set();
