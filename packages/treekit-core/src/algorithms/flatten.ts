@@ -20,6 +20,7 @@ export function buildFlatTree(
   const idKey = mapper.id;
   const parentIdKey = mapper.parentId;
   const nameKey = mapper.name;
+  const iconKey = mapper.icon;
 
   // Step 1: 构建 childrenMap 和 rawMap
   const childrenMap = new Map<string | null, string[]>();
@@ -69,6 +70,7 @@ export function buildFlatTree(
         id: String(raw[idKey]),
         name: String(raw[nameKey]),
         parentId: raw[parentIdKey] as string | null,
+        icon: raw[iconKey] as string | undefined,
         depth,
         index,
         subtreeEnd: index, // 先设为自己，后面更新

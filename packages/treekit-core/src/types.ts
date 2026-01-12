@@ -8,6 +8,8 @@ export interface FieldMapper {
   name?: string;
   /** 子节点列表字段名，默认 'children'（可选） */
   children?: string;
+  /** 图标字段名，默认 'icon'（可选） */
+  icon?: string;
 }
 
 // ============ 原始数据（后端返回） ============
@@ -32,7 +34,8 @@ export const DEFAULT_FIELD_MAPPER: Required<FieldMapper> = {
   id: 'id',
   parentId: 'parentId',
   name: 'name',
-  children: 'children'
+  children: 'children',
+  icon: 'icon'
 };
 
 // ============ 导出节点状态（供 UI 使用） ============

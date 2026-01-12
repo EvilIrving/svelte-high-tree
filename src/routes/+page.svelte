@@ -48,16 +48,16 @@
 
   // 带图标的数据
   const iconData: RawNode[] = [
-    { id: 'docs', name: '文档', parentId: null },
-    { id: 'docs-api', name: 'API 文档', parentId: 'docs' },
-    { id: 'docs-guide', name: '使用指南', parentId: 'docs' },
-    { id: 'docs-faq', name: '常见问题', parentId: 'docs' },
-    { id: 'src', name: '源代码', parentId: null },
-    { id: 'src-core', name: '核心模块', parentId: 'src' },
-    { id: 'src-utils', name: '工具函数', parentId: 'src' },
-    { id: 'src-components', name: '组件', parentId: 'src' },
-    { id: 'tests', name: '测试', parentId: null },
-    { id: 'config', name: '配置文件', parentId: null }
+    { id: 'docs', name: '文档', parentId: null, icon: '🥥' },
+    { id: 'docs-api', name: 'API 文档', parentId: 'docs', icon: '🥥' },
+    { id: 'docs-guide', name: '使用指南', parentId: 'docs', icon: '🥥' },
+    { id: 'docs-faq', name: '常见问题', parentId: 'docs', icon: '🥥' },
+    { id: 'src', name: '源代码', parentId: null, icon: '🥥' },
+    { id: 'src-core', name: '核心模块', parentId: 'src', icon: '🥥' },
+    { id: 'src-utils', name: '工具函数', parentId: 'src', icon: '🥥' },
+    { id: 'src-components', name: '组件', parentId: 'src', icon: '🥥' },
+    { id: 'tests', name: '测试', parentId: null, icon: '🥥' },
+    { id: 'config', name: '配置文件', parentId: null, icon: '🥥' }
   ];
 
   // 自定义字段数据
@@ -108,6 +108,13 @@
   // Demo 6: 完全自定义节点
   let customNodeTreeRef: Tree;
   let selectedCustomNode = $state<TreeNode | null>(null);
+  let checkedLeafKeys = $state<string[]>([]);
+
+  /** 获取所有已选中的叶子节点 ID */
+  function getCheckedLeafKeys() {
+    checkedLeafKeys = customNodeTreeRef?.getCheckedLeafKeys() ?? [];
+    console.log('选中的叶子节点:', checkedLeafKeys);
+  }
 
   // ============ 事件处理 ============
 
@@ -431,6 +438,12 @@ treeRef.prevMatch();`}</code></pre>
             <span>当前选中:</span>
             <strong>{selectedCustomNode?.name ?? '无'}</strong>
           </div>
+          {#if checkedLeafKeys.length > 0}
+            <div class="leaf-keys-info">
+              <span>已选中的叶子节点:</span>
+              <code>{checkedLeafKeys.join(', ')}</code>
+            </div>
+          {/if}
 
           <div class="tree-wrapper">
             <Tree
@@ -448,6 +461,7 @@ treeRef.prevMatch();`}</code></pre>
           <button onclick={() => customNodeTreeRef?.expandToDepth(2)}>展开到二级</button>
           <button onclick={() => console.log('单选选中:', customNodeTreeRef?.getSelectedKey())}>获取单选选中</button>
           <button onclick={() => console.log('复选框选中:', customNodeTreeRef?.getCheckedKeys())}>获取复选框选中</button>
+          <button onclick={getCheckedLeafKeys}>获取选中叶子节点</button>
         </div>
       </section>
     {/if}
@@ -685,6 +699,25 @@ treeRef.prevMatch();`}</code></pre>
   .selected-info strong {
     color: #1890ff;
     margin-left: 8px;
+  }
+
+  .leaf-keys-info {
+    padding: 8px 16px;
+    background: #fff;
+    border-bottom: 1px solid #e0e0e0;
+    font-size: 13px;
+    color: #666;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .leaf-keys-info code {
+    background: #f5f5f5;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-family: 'SF Mono', Consolas, monospace;
+    color: #333;
   }
 
   .page-footer {

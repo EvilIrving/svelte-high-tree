@@ -48,6 +48,12 @@
 
   // 计算缩进
   let indent = $derived(node.depth * indentSize + (showCheckbox ? 0 : 20));
+
+  // 判断图标是否为图片 URL
+  function isIconUrl(url: string | undefined): boolean {
+    if (!url) return false;
+    return url.startsWith('http://') || url.startsWith('https://') || url.startsWith('/');
+  }
 </script>
 
 <div
@@ -108,6 +114,35 @@
     title={node.name}
     onclick={(e) => { e.stopPropagation(); onNodeClick?.(); }}
   >
+    {#if node.icon}
+      {#if isIconUrl(node.icon)}
+        <img class="treekit-node-icon" src={node.icon} alt="" />
+      {:else}
+        <span class="treekit-node-icon">{@html node.icon}</span>
+      {/if}
+    {/if}
     {node.name}
   </span>
 </div>
+
+<style>
+  .treekit-node-icon {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    margin-right: 4px;
+    vertical-align: middle;
+    text-align: center;
+    line-height: 1;
+  }
+
+  .treekit-node-icon:empty {
+    display: none;
+  }
+
+  .treekit-node-icon img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+</style>

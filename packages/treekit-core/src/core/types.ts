@@ -12,6 +12,8 @@ export interface TreeNode {
   name: string;
   /** 父节点 ID，根节点为 null */
   parentId: string | null;
+  /** 图标（来自原始数据） */
+  icon?: string;
   /** 层级深度（根节点为 0） */
   depth: number;
   /** 在节点列表中的索引位置 */

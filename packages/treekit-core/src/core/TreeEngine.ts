@@ -80,7 +80,8 @@ export class TreeEngine {
       id: mapper.id ?? DEFAULT_FIELD_MAPPER.id,
       parentId: mapper.parentId ?? DEFAULT_FIELD_MAPPER.parentId,
       name: mapper.name ?? DEFAULT_FIELD_MAPPER.name,
-      children: mapper.children ?? DEFAULT_FIELD_MAPPER.children
+      children: mapper.children ?? DEFAULT_FIELD_MAPPER.children,
+      icon: mapper.icon ?? DEFAULT_FIELD_MAPPER.icon
     };
   }
 
