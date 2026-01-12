@@ -1,4 +1,10 @@
-// src/createTree.svelte.ts
+// src/tree/Tree.svelte
+import "svelte/internal/disclose-version";
+import * as $4 from "svelte/internal/client";
+import { onMount as onMount2, onDestroy as onDestroy2 } from "svelte";
+import { expandMultiple } from "@light-cat/treekit-core";
+
+// src/tree/createTree.svelte.ts
 import { TreeEngine } from "@light-cat/treekit-core";
 import { SvelteSet } from "svelte/reactivity";
 function createTree(nodes, options) {
@@ -198,18 +204,12 @@ function createTree(nodes, options) {
   };
 }
 
-// src/Tree.svelte
+// src/virtual/VirtualTree.svelte
 import "svelte/internal/disclose-version";
 import * as $3 from "svelte/internal/client";
-import { onMount as onMount2, onDestroy as onDestroy2 } from "svelte";
-import { expandMultiple } from "@light-cat/treekit-core";
+import { getCheckState } from "@light-cat/treekit-core";
 
-// src/VirtualTree.svelte
-import "svelte/internal/disclose-version";
-import * as $2 from "svelte/internal/client";
-import { onMount, onDestroy } from "svelte";
-
-// src/TreeNode.svelte
+// src/tree/TreeNode.svelte
 import "svelte/internal/disclose-version";
 import * as $ from "svelte/internal/client";
 var root_1 = $.from_svg(`<svg class="treekit-expand-icon" viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"></path></svg>`);
@@ -307,26 +307,18 @@ function TreeNode($$anchor, $$props) {
 }
 $.delegate(["click", "change"]);
 
-// src/VirtualTree.svelte
-import { VirtualListController, getCheckState } from "@light-cat/treekit-core";
-var root2 = $2.from_html(`<div class="treekit-virtual"><div class="treekit-virtual-spacer"><div class="treekit-virtual-sentinel"></div> <div class="treekit-virtual-viewport"></div> <div class="treekit-virtual-sentinel"></div></div></div>`);
-function VirtualTree($$anchor, $$props) {
+// src/virtual/VirtualList.svelte
+import "svelte/internal/disclose-version";
+import * as $2 from "svelte/internal/client";
+import { onMount, onDestroy } from "svelte";
+import { VirtualListController } from "@light-cat/treekit-core";
+var root2 = $2.from_html(`<div class="treekit-virtual-list svelte-nbyakm"><div class="treekit-virtual-spacer svelte-nbyakm"><div class="treekit-sentinel svelte-nbyakm"></div> <div class="treekit-viewport svelte-nbyakm"></div> <div class="treekit-sentinel svelte-nbyakm"></div></div></div>`);
+function VirtualList($$anchor, $$props) {
   $2.push($$props, true);
-  let showCheckbox = $2.prop($$props, "showCheckbox", 3, false), checkStrictly = $2.prop($$props, "checkStrictly", 3, false), currentMatchId = $2.prop($$props, "currentMatchId", 3, null), selectedId = $2.prop($$props, "selectedId", 3, null), itemHeight = $2.prop($$props, "itemHeight", 3, 32);
-  function getCheckStateForNode(node) {
-    if (checkStrictly()) {
-      return $$props.checkedSet.has(node.id) ? "checked" : "unchecked";
-    }
-    return getCheckState(node, $$props.flatNodes, $$props.checkedSet);
-  }
-  function isNodeExpanded(nodeId) {
-    return $$props.expandedSet.has(nodeId);
-  }
+  let itemHeight = $2.prop($$props, "itemHeight", 3, 32), bufferSize = $2.prop($$props, "bufferSize", 3, 10);
   let startIndex = $2.state(0);
   let endIndex = $2.state(50);
   let offsetTop = $2.state(0);
-  let renderList = $2.derived(() => $$props.visibleList.slice($2.get(startIndex), $2.get(endIndex)));
-  let totalHeight = $2.derived(() => $$props.visibleList.length * itemHeight());
   let containerRef;
   let topSentinelRef;
   let bottomSentinelRef;
@@ -334,7 +326,7 @@ function VirtualTree($$anchor, $$props) {
   onMount(() => {
     controller = new VirtualListController({
       itemHeight: itemHeight(),
-      bufferSize: 10,
+      bufferSize: bufferSize(),
       onStateChange: (state2) => {
         $2.set(startIndex, state2.startIndex, true);
         $2.set(endIndex, state2.endIndex, true);
@@ -342,17 +334,22 @@ function VirtualTree($$anchor, $$props) {
       }
     });
     controller.init(containerRef, topSentinelRef, bottomSentinelRef);
-    controller.setFindIndexById((nodeId) => $$props.visibleList.findIndex((n) => n.id === nodeId));
-    controller.updateVisibleList($$props.visibleList);
+    controller.setFindIndexById((id) => $$props.items.findIndex((item) => item.id === id));
+    controller.updateVisibleList($$props.items);
   });
   onDestroy(() => {
     controller?.destroy();
   });
   $2.user_effect(() => {
-    controller?.updateVisibleList($$props.visibleList);
+    controller?.updateVisibleList($$props.items);
   });
-  function scrollToNode(nodeId) {
-    controller?.scrollToNode(nodeId);
+  let renderList = $2.derived(() => $$props.items.slice($2.get(startIndex), $2.get(endIndex)));
+  let totalHeight = $2.derived(() => $$props.items.length * itemHeight());
+  function scrollToNode(id) {
+    controller?.scrollToNode(id);
+  }
+  function scrollToIndex(index) {
+    controller?.scrollToIndex(index);
   }
   function scrollToTop() {
     controller?.scrollToTop();
@@ -360,7 +357,7 @@ function VirtualTree($$anchor, $$props) {
   function scrollToBottom() {
     controller?.scrollToBottom();
   }
-  var $$exports = { scrollToNode, scrollToTop, scrollToBottom };
+  var $$exports = { scrollToNode, scrollToIndex, scrollToTop, scrollToBottom };
   var div = root2();
   var div_1 = $2.child(div);
   let styles;
@@ -369,43 +366,11 @@ function VirtualTree($$anchor, $$props) {
   $2.bind_this(div_2, ($$value) => topSentinelRef = $$value, () => topSentinelRef);
   var div_3 = $2.sibling(div_2, 2);
   let styles_2;
-  $2.each(div_3, 21, () => $2.get(renderList), (node) => node.id, ($$anchor2, node) => {
-    {
-      let $0 = $2.derived(() => isNodeExpanded($2.get(node).id));
-      let $1 = $2.derived(() => getCheckStateForNode($2.get(node)));
-      let $22 = $2.derived(() => $$props.matchSet?.has($2.get(node).id));
-      let $32 = $2.derived(() => currentMatchId() === $2.get(node).id);
-      let $4 = $2.derived(() => selectedId() === $2.get(node).id);
-      TreeNode($$anchor2, {
-        get node() {
-          return $2.get(node);
-        },
-        get expanded() {
-          return $2.get($0);
-        },
-        get checkState() {
-          return $2.get($1);
-        },
-        get showCheckbox() {
-          return showCheckbox();
-        },
-        get isMatch() {
-          return $2.get($22);
-        },
-        get isCurrent() {
-          return $2.get($32);
-        },
-        get isSelected() {
-          return $2.get($4);
-        },
-        get itemHeight() {
-          return itemHeight();
-        },
-        onToggleExpand: () => $$props.onToggleExpand($2.get(node).id),
-        onToggleCheck: () => $$props.onToggleCheck($2.get(node).id),
-        onNodeClick: () => $$props.onNodeClick($2.get(node).id)
-      });
-    }
+  $2.each(div_3, 21, () => $2.get(renderList), (item) => item.id, ($$anchor2, item) => {
+    var fragment = $2.comment();
+    var node = $2.first_child(fragment);
+    $2.snippet(node, () => $$props.children, () => $2.get(item));
+    $2.append($$anchor2, fragment);
   });
   $2.reset(div_3);
   var div_4 = $2.sibling(div_3, 2);
@@ -429,10 +394,88 @@ function VirtualTree($$anchor, $$props) {
   return $2.pop($$exports);
 }
 
-// src/Tree.svelte
+// src/virtual/VirtualTree.svelte
+function VirtualTree($$anchor, $$props) {
+  $3.push($$props, true);
+  let showCheckbox = $3.prop($$props, "showCheckbox", 3, false), checkStrictly = $3.prop($$props, "checkStrictly", 3, false), currentMatchId = $3.prop($$props, "currentMatchId", 3, null), selectedId = $3.prop($$props, "selectedId", 3, null), itemHeight = $3.prop($$props, "itemHeight", 3, 32);
+  function getCheckStateForNode(node) {
+    if (checkStrictly()) {
+      return $$props.checkedSet.has(node.id) ? "checked" : "unchecked";
+    }
+    return getCheckState(node, $$props.flatNodes, $$props.checkedSet);
+  }
+  let listRef;
+  function scrollToNode(nodeId) {
+    listRef?.scrollToNode(nodeId);
+  }
+  function scrollToTop() {
+    listRef?.scrollToTop();
+  }
+  function scrollToBottom() {
+    listRef?.scrollToBottom();
+  }
+  var $$exports = { scrollToNode, scrollToTop, scrollToBottom };
+  {
+    const children = ($$anchor2, node = $3.noop) => {
+      {
+        let $0 = $3.derived(() => $$props.expandedSet.has(node().id));
+        let $1 = $3.derived(() => getCheckStateForNode(node()));
+        let $22 = $3.derived(() => $$props.matchSet?.has(node().id));
+        let $32 = $3.derived(() => currentMatchId() === node().id);
+        let $42 = $3.derived(() => selectedId() === node().id);
+        TreeNode($$anchor2, {
+          get node() {
+            return node();
+          },
+          get expanded() {
+            return $3.get($0);
+          },
+          get checkState() {
+            return $3.get($1);
+          },
+          get showCheckbox() {
+            return showCheckbox();
+          },
+          get isMatch() {
+            return $3.get($22);
+          },
+          get isCurrent() {
+            return $3.get($32);
+          },
+          get isSelected() {
+            return $3.get($42);
+          },
+          get itemHeight() {
+            return itemHeight();
+          },
+          onToggleExpand: () => $$props.onToggleExpand(node().id),
+          onToggleCheck: () => $$props.onToggleCheck(node().id),
+          onNodeClick: () => $$props.onNodeClick(node().id)
+        });
+      }
+    };
+    $3.bind_this(
+      VirtualList($$anchor, {
+        get items() {
+          return $$props.visibleList;
+        },
+        get itemHeight() {
+          return itemHeight();
+        },
+        children,
+        $$slots: { default: true }
+      }),
+      ($$value) => listRef = $$value,
+      () => listRef
+    );
+  }
+  return $3.pop($$exports);
+}
+
+// src/tree/Tree.svelte
 import { SearchController } from "@light-cat/treekit-core";
 
-// src/search-navigator.svelte.ts
+// src/search/search-navigator.svelte.ts
 import { getAncestorSet } from "@light-cat/treekit-core";
 var SearchNavigator = class {
   constructor(config) {
@@ -569,12 +612,12 @@ function createSearchNavigator(config) {
   return new SearchNavigator(config);
 }
 
-// src/Tree.svelte
+// src/tree/Tree.svelte
 import { createSearchConfig } from "@light-cat/treekit-core";
-var root3 = $3.from_html(`<div><!></div>`);
+var root3 = $4.from_html(`<div><!></div>`);
 function Tree($$anchor, $$props) {
-  $3.push($$props, true);
-  let checkable = $3.prop($$props, "checkable", 3, false), checkStrictly = $3.prop($$props, "checkStrictly", 3, false), defaultCheckedKeys = $3.prop($$props, "defaultCheckedKeys", 19, () => []), defaultExpandedKeys = $3.prop($$props, "defaultExpandedKeys", 19, () => []), defaultSelectedKeys = $3.prop($$props, "defaultSelectedKeys", 19, () => []), selectable = $3.prop($$props, "selectable", 3, true), searchable = $3.prop($$props, "searchable", 3, false), itemHeight = $3.prop($$props, "itemHeight", 3, 32), className = $3.prop($$props, "class", 3, "");
+  $4.push($$props, true);
+  let checkable = $4.prop($$props, "checkable", 3, false), checkStrictly = $4.prop($$props, "checkStrictly", 3, false), defaultCheckedKeys = $4.prop($$props, "defaultCheckedKeys", 19, () => []), defaultExpandedKeys = $4.prop($$props, "defaultExpandedKeys", 19, () => []), defaultSelectedKeys = $4.prop($$props, "defaultSelectedKeys", 19, () => []), selectable = $4.prop($$props, "selectable", 3, true), searchable = $4.prop($$props, "searchable", 3, false), itemHeight = $4.prop($$props, "itemHeight", 3, 32), className = $4.prop($$props, "class", 3, "");
   const tree = createTree($$props.treeData, {
     checkable: checkable(),
     checkStrictly: checkStrictly(),
@@ -757,8 +800,8 @@ function Tree($$anchor, $$props) {
     getStats
   };
   var div = root3();
-  var node_1 = $3.child(div);
-  $3.bind_this(
+  var node_1 = $4.child(div);
+  $4.bind_this(
     VirtualTree(node_1, {
       get visibleList() {
         return tree.visibleList;
@@ -800,10 +843,10 @@ function Tree($$anchor, $$props) {
     ($$value) => virtualTreeRef = $$value,
     () => virtualTreeRef
   );
-  $3.reset(div);
-  $3.template_effect(() => $3.set_class(div, 1, `treekit-tree ${className() ?? ""}`, "svelte-1l8c7yj"));
-  $3.append($$anchor, div);
-  return $3.pop($$exports);
+  $4.reset(div);
+  $4.template_effect(() => $4.set_class(div, 1, `treekit-tree ${className() ?? ""}`, "svelte-1y7d2q4"));
+  $4.append($$anchor, div);
+  return $4.pop($$exports);
 }
 
 // src/index.ts
@@ -815,7 +858,8 @@ export {
   SearchController2 as SearchController,
   SearchNavigator,
   Tree,
-  TreeNode,
+  TreeNode as TreeNodeView,
+  VirtualList,
   VirtualListController2 as VirtualListController,
   VirtualTree,
   calculateVisibleRange,

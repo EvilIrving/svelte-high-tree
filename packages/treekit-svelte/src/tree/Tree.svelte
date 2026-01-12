@@ -3,9 +3,9 @@
 	import type { TreeNode, RawNode, FieldMapper } from '@light-cat/treekit-core';
 	import { expandMultiple } from '@light-cat/treekit-core';
 	import { createTree } from './createTree.svelte';
-	import VirtualTree from './VirtualTree.svelte';
+	import VirtualTree from '../virtual/VirtualTree.svelte';
 	import { SearchController } from '@light-cat/treekit-core';
-	import { SearchNavigator } from './search-navigator.svelte';
+	import { SearchNavigator } from '../search/search-navigator.svelte';
 	import { createSearchConfig } from '@light-cat/treekit-core';
 
 	// ============ Props 定义 ============

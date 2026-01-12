@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { Tree } from '@light-cat/treekit-svelte';
-  import type { RawNode, FlatNode } from '@light-cat/treekit-core';
+  import type { RawNode, TreeNode } from '@light-cat/treekit-core';
 
   /**
    * 生成有序的测试数据
@@ -180,14 +180,14 @@
   /**
    * 展开回调
    */
-  function handleExpand(expandedKeys: string[], info: { node: FlatNode; expanded: boolean }): void {
+  function handleExpand(expandedKeys: string[], info: { node: TreeNode; expanded: boolean }): void {
     updateStats();
   }
 
   /**
    * 勾选回调
    */
-  function handleCheck(checkedKeys: string[], info: { node: FlatNode; checked: boolean }): void {
+  function handleCheck(checkedKeys: string[], info: { node: TreeNode; checked: boolean }): void {
     updateStats();
   }
 
@@ -301,7 +301,7 @@
         bind:this={treeRef}
         {treeData}
         checkable={true}
-        searchable={false}
+        searchable={true}
         itemHeight={32}
         onExpand={handleExpand}
         onCheck={handleCheck}
@@ -658,7 +658,7 @@
   }
 
   /* 虚拟树容器样式 */
-  .page-container :global(.treekit-virtual) {
+  .page-container :global(.treekit-virtual-list) {
     height: 100%;
     overflow: auto;
     position: relative;
